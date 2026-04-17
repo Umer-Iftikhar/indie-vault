@@ -1,3 +1,57 @@
+`AspNetUsers Table`
+```sql
+-- Custom Identity User Table
+CREATE TABLE AspNetUsers (
+    -- Primary Key
+    Id VARCHAR(255) PRIMARY KEY,
+    
+    -- Your Custom Fields
+    GithubUserName VARCHAR(100) NULL,
+    CreatedDate DATETIME(6) NOT NULL,
+
+    -- Core Authentication (The bare minimum)
+    UserName VARCHAR(256) NULL,
+    NormalizedUserName VARCHAR(256) NULL,
+    Email VARCHAR(256) NULL,
+    NormalizedEmail VARCHAR(256) NULL,
+    PasswordHash LONGTEXT NULL,
+    
+    -- The 'Hidden' Logic Fields
+    -- SecurityStamp: Invalidates cookies/tokens when password changes
+    SecurityStamp LONGTEXT NULL,
+    -- ConcurrencyStamp: Prevents two admins from editing a user at the same time
+    ConcurrencyStamp LONGTEXT NULL,
+
+    -- Indexes (Essential for fast login lookups)
+    UNIQUE KEY UserNameIndex (NormalizedUserName),
+    KEY EmailIndex (NormalizedEmail)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+````
+
+`AspNetRoles Table`
+```sql
+CREATE TABLE aspnetroles (
+  Id VARCHAR(255) PRIMARY KEY,
+  Name VARCHAR(256) DEFAULT NULL,
+  NormalizedName VARCHAR(256) DEFAULT NULL,
+  ConcurrencyStamp LONGTEXT,
+  UNIQUE KEY RoleNameIndex (NormalizedName)
+) ENGINE=InnoDB;
+```
+
+`AspNetUserRoles`
+```sql
+CREATE TABLE aspnetuserroles (
+  UserId VARCHAR(255) NOT NULL,
+  RoleId VARCHAR(255) NOT NULL,
+  PRIMARY KEY (UserId, RoleId),
+  CONSTRAINT FK_AspNetUserRoles_AspNetRoles_RoleId FOREIGN KEY (RoleId) 
+    REFERENCES aspnetroles (Id) ON DELETE CASCADE,
+  CONSTRAINT FK_AspNetUserRoles_AspNetUsers_UserId FOREIGN KEY (UserId) 
+    REFERENCES AspNetUsers (Id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+```
+
 `Genres Table`
 ```sql
 CREATE TABLE Genres (
@@ -15,77 +69,58 @@ CREATE TABLE Tags (
 ) ENGINE=InnoDB;
 ```
 
-`GameTags Table`
+`Engines Table`
 ```sql
--- Many-to-Many Join Table for Games and Tags
-CREATE TABLE GameTag (
-    GameId INT PRIMARY KEY,
-    TagId INT PRIMARY KEYL,
-    CONSTRAINT FK_GameTag_Games_GameId FOREIGN KEY (GameId) 
-        REFERENCES Games (Id) ON DELETE CASCADE,
-    CONSTRAINT FK_GameTag_Tags_TagId FOREIGN KEY (TagId) 
-        REFERENCES Tags (Id) ON DELETE CASCADE
+CREATE TABLE Engines (
+    Id INT AUTO_INCREMENT PRIMARY KEY, 
+    Name VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 ```
 
-`ApplicationUsers Table`
+`Platforms Table`
 ```sql
--- Custom Identity User Table
-CREATE TABLE AspNetUsers (
-    Id VARCHAR(255) PRIMARY KEY,
-    UserName VARCHAR(256) NULL,
-    NormalizedUserName VARCHAR(256) NULL,
-    Email VARCHAR(256) NULL,
-    NormalizedEmail VARCHAR(256) NULL,
-    EmailConfirmed TINYINT(1) NOT NULL,
-    PasswordHash LONGTEXT NULL,
-    SecurityStamp LONGTEXT NULL,
-    ConcurrencyStamp LONGTEXT NULL,
-    PhoneNumber LONGTEXT NULL,
-    PhoneNumberConfirmed TINYINT(1) NOT NULL,
-    TwoFactorEnabled TINYINT(1) NOT NULL,
-    LockoutEnd DATETIME(6) NULL,
-    LockoutEnabled TINYINT(1) NOT NULL,
-    AccessFailedCount INT NOT NULL,
-
-    -- Custom fields from ApplicationUser
-
-    GithubUserName VARCHAR(100)  NULL ,
-    CreatedDate DATETIME(6) NOT NULL,
+CREATE TABLE Platforms (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 ```
 
 `Games Table`
 ```sql
+-- Main Entities
 CREATE TABLE Games (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     Title VARCHAR(100) NOT NULL,
     Description VARCHAR(500) NOT NULL,
     Price DECIMAL(18, 2) NOT NULL,
     ReleaseDate DATETIME(6) NOT NULL,
-    Engine VARCHAR(50) NOT NULL,
-    Platforms VARCHAR(50) NOT NULL,
     CoverImagePath VARCHAR(500) NOT NULL,
     DownloadLink VARCHAR(500) NOT NULL,
     IsFeatured TINYINT(1) NOT NULL DEFAULT 0,
     CreatedDate DATETIME(6) NOT NULL,
     GenreId INT NOT NULL,
     DeveloperId VARCHAR(255) NOT NULL,
-    CONSTRAINT FK_Games_Genres_GenreId FOREIGN KEY (GenreId) 
-        REFERENCES Genres (Id) ON DELETE CASCADE,
-    CONSTRAINT FK_Games_AspNetUsers_DeveloperId FOREIGN KEY (DeveloperId) 
-        REFERENCES AspNetUsers (Id) ON DELETE CASCADE
+    EngineId INT NOT NULL,
+    CONSTRAINT FK_Games_Genres FOREIGN KEY (GenreId) 
+        REFERENCES Genres(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_Games_Users FOREIGN KEY (DeveloperId) 
+        REFERENCES AspNetUsers(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_Games_Engines FOREIGN KEY (EngineId) 
+        REFERENCES Engines(Id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 ```
 
-`Screenshots Table`
+`GameTags Table`
 ```sql
-CREATE TABLE Screenshots (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    ImagePath VARCHAR(500) NOT NULL,
+-- Many-to-Many Join Table for Games and Tags
+CREATE TABLE GameTag (
     GameId INT NOT NULL,
-    CONSTRAINT FK_Screenshots_Games_GameId FOREIGN KEY (GameId) 
-        REFERENCES Games (Id) ON DELETE CASCADE
+    TagId INT NOT NULL,
+    PRIMARY KEY (GameId, TagId),
+    CONSTRAINT FK_GameTag_Games_GameId FOREIGN KEY (GameId) 
+        REFERENCES Games (Id) ON DELETE CASCADE,
+    CONSTRAINT FK_GameTag_Tags_TagId FOREIGN KEY (TagId) 
+        REFERENCES Tags (Id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 ```
 
@@ -102,6 +137,18 @@ CREATE TABLE Reviews (
         REFERENCES Games (Id) ON DELETE CASCADE,
     CONSTRAINT FK_Reviews_AspNetUsers_UserId FOREIGN KEY (UserId) 
         REFERENCES AspNetUsers (Id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+```
+
+`GamePlatforms Table`
+```sql
+CREATE TABLE GamePlatforms (
+    GameId INT NOT NULL, PlatformId INT NOT NULL,
+    PRIMARY KEY (GameId, PlatformId),
+    CONSTRAINT FK_GP_Games FOREIGN KEY (GameId) 
+        REFERENCES Games(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_GP_Platforms FOREIGN KEY (PlatformId) 
+        REFERENCES Platforms(Id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 ```
 
@@ -132,3 +179,15 @@ CREATE TABLE Wishlists (
         REFERENCES AspNetUsers (Id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 ```
+
+`Screenshots Table`
+```sql
+CREATE TABLE Screenshots (
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    ImagePath VARCHAR(500) NOT NULL,
+    GameId INT NOT NULL,
+    CONSTRAINT FK_Screenshots_Games_GameId FOREIGN KEY (GameId) 
+        REFERENCES Games (Id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+```
+
