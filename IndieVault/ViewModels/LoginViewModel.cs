@@ -12,7 +12,7 @@ namespace IndieVault.ViewModels
         [DataType(DataType.Password)]
         [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
         public string Password { get; set; } = string.Empty;
-        
+        [Display(Name = "Remember Me")]
         public bool RememberMe { get; set; }
     }
 }

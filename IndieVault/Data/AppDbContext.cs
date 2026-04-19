@@ -38,6 +38,7 @@ namespace IndieVault.Data
             builder.Entity<Genre>().HasIndex(g => g.Name).IsUnique();
             builder.Entity<Tag>().HasIndex(t => t.Name).IsUnique();
             builder.Entity<Engine>().HasIndex(e => e.Name).IsUnique();
+            builder.Entity<ApplicationUser>().HasIndex(u => u.NormalizedEmail).IsUnique();
         }
     }
 }

@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -19,9 +18,23 @@ builder.Services.AddDbContext<IndieVault.Data.AppDbContext>
         .EnableSensitiveDataLogging()
 );
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    
-    .AddEntityFrameworkStores<IndieVault.Data.AppDbContext>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    // Password settings
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = true; 
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequiredUniqueChars = 1;
+    options.User.AllowedUserNameCharacters = string.Empty; // Allow all characters in usernames
+    options.User.RequireUniqueEmail = true;
+
+    // Optional: Lockout settings
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+})
+.AddEntityFrameworkStores<IndieVault.Data.AppDbContext>()
     .AddDefaultTokenProviders();
 
 

@@ -24,3 +24,13 @@ COMMIT;
 
 -- (If something failed, it runs 'ROLLBACK' and nothing is changed)
 ```
+
+### Fetching Data
+fetching every user from AspNetUsers and joins their role information from two other tables.
+```sql
+SELECT u.Id, u.UserName, u.Email, r.Name as RoleName
+FROM AspNetUsers u
+LEFT JOIN AspNetUserRoles ur ON u.Id = ur.UserId
+LEFT JOIN AspNetRoles r ON ur.RoleId = r.Id
+ORDER BY r.Name;
+```
