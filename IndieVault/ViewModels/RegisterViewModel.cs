@@ -6,7 +6,7 @@ namespace IndieVault.ViewModels
     {
         [Required]
         [MinLength(2, ErrorMessage = "Name must be at least 2 characters long.")]
-        public string UserName { get; set; }
+        public string UserName { get; set; } = string.Empty;
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
