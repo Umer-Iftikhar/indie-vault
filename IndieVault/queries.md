@@ -34,3 +34,17 @@ LEFT JOIN AspNetUserRoles ur ON u.Id = ur.UserId
 LEFT JOIN AspNetRoles r ON ur.RoleId = r.Id
 ORDER BY r.Name;
 ```
+
+fetching game of a specific user.
+```sql
+SELECT 
+    g.Title, 
+    g.Price, 
+    gen.Name AS Genre, 
+    t.Name AS TagName
+FROM Games g
+JOIN Genres gen ON g.GenreId = gen.Id
+LEFT JOIN GameTags gt ON g.Id = gt.GameId
+LEFT JOIN Tags t ON gt.TagId = t.Id
+WHERE g.DeveloperId = 'dev-uuid-123';
+```

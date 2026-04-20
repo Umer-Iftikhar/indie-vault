@@ -1,0 +1,105 @@
+﻿@model IndieVault.ViewModels.GameUploadViewModel
+
+@{
+    ViewData["Title"] = "Upload Game";
+}
+<h1>@ViewData["Title"]</h1>
+
+<form asp-controller="Game" asp-action="Upload" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    @* 1. Basic Text Input *@
+    <div>
+        <label asp-for="Title"></label>
+        <input asp-for="Title" />
+        <span asp-validation-for="Title"></span>
+    </div>
+
+    @* 2. Textarea *@
+    <div>
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description"></textarea>
+        <span asp-validation-for="Description"></span>
+    </div>
+
+    @* 3. Dropdown (Genre) *@
+    <div>
+        <label>Genre</label>
+        <select asp-for="SelectedGenreId"
+                asp-items="@(new SelectList(Model.Genres, "Id", "Name"))">
+            <option value="">Choose Genre</option>
+        </select>
+        <span asp-validation-for="SelectedGenreId"></span>
+    </div>
+
+    @* 4. Dropdown (Engine) *@
+    <div>
+        <label>Engine</label>
+        <select asp-for="SelectedEngineId"
+                asp-items="@(new SelectList(Model.Engines, "Id", "Name"))">
+            <option value="">Choose Engine</option>
+        </select>
+        <span asp-validation-for="SelectedEngineId"></span>
+    </div>
+
+    @* 5. Multi-Checkbox (Platforms) *@
+    <div>
+        <label>Platforms</label>
+        @foreach (var platform in Model.Platforms)
+        {
+            <input type="checkbox" name="SelectedPlatforms" value="@platform.Id" />
+            <span>@platform.Name</span>
+        }
+    </div>
+
+    @* 6. Multi-Checkbox (Tags) *@
+    <div>
+        <label>Tags</label>
+        @foreach (var tag in Model.Tags)
+        {
+            <input type="checkbox" name="SelectedTags" value="@tag.Id" />
+            <span>@tag.Name</span>
+        }
+    </div>
+
+    @* 7. File Upload (Cover) *@
+    <div>
+        <label asp-for="CoverImage">Cover Image</label>
+        <input asp-for="CoverImage" type="file" />
+    </div>
+
+    @* 8. Multi-File Upload (Screenshots) *@
+    <div>
+        <label asp-for="Screenshots">Screenshots</label>
+        <input asp-for="Screenshots" type="file" multiple />
+    </div>
+
+    @* 9. Download Link *@
+    <div>
+        <label asp-for="DownloadLink"></label>
+        <input asp-for="DownloadLink" />
+        <span asp-validation-for="DownloadLink"></span>
+    </div>
+
+    @* 10. Price *@
+    <div>
+        <label asp-for="Price"></label>
+        <input asp-for="Price" />
+        <span asp-validation-for="Price"></span>
+    </div>
+
+    @* 11. Release Date *@
+    <div>
+        <label asp-for="ReleaseDate"></label>
+        <input asp-for="ReleaseDate" type="date" />
+        <span asp-validation-for="ReleaseDate"></span>
+    </div>
+
+    <button type="submit">Save Game</button>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -111,7 +111,7 @@ namespace IndieVault.Controllers
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                 return View(model);
             }
-            var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, isPersistent: false , lockoutOnFailure: true);
+            var result = await _signInManager.PasswordSignInAsync(user.UserName!, model.Password, isPersistent: false , lockoutOnFailure: true);
             if (result.Succeeded)
             {
                 return RedirectToAction("Index", "Home");
