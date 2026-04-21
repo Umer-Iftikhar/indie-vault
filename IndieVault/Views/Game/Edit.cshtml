@@ -1,12 +1,15 @@
-﻿@model IndieVault.ViewModels.GameUploadViewModel
+﻿@model IndieVault.ViewModels.GameEditViewModel
 
 @{
     ViewData["Title"] = "Upload Game";
 }
 <h1>@ViewData["Title"]</h1>
 
-<form asp-controller="Game" asp-action="Upload" method="post" enctype="multipart/form-data">
+<form asp-controller="Game" asp-action="Edit" method="post" enctype="multipart/form-data">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <input asp-for="Id" type="hidden" />
+
 
     @* 1. Basic Text Input *@
     <div>
@@ -45,9 +48,10 @@
     @* 5. Multi-Checkbox (Platforms) *@
     <div>
         <label>Platforms</label>
+       
         @foreach (var platform in Model.Platforms)
         {
-            <input type="checkbox" name="SelectedPlatforms" value="@platform.Id" />
+            <input type="checkbox" name="SelectedPlatforms" value="@platform.Id" @(Model.SelectedPlatforms.Contains(platform.Id.ToString()) ? "checked" : "") />
             <span>@platform.Name</span>
         }
     </div>
@@ -55,16 +59,25 @@
     @* 6. Multi-Checkbox (Tags) *@
     <div>
         <label>Tags</label>
+     
         @foreach (var tag in Model.Tags)
         {
-            <input type="checkbox" name="SelectedTags" value="@tag.Id" />
+            <input type="checkbox" name="SelectedTags" value="@tag.Id" @(Model.SelectedTags.Contains(tag.Id.ToString()) ? "checked" : "") />
             <span>@tag.Name</span>
         }
     </div>
 
     @* 7. File Upload (Cover) *@
+    <input asp-for="ExistingCoverImagePath" type="hidden" />
+
     <div>
-        <label asp-for="CoverImage">Cover Image</label>
+        @if (!string.IsNullOrEmpty(Model.ExistingCoverImagePath))
+        {
+            var coverUrl = $"{Model.ExistingCoverImagePath}?v={DateTime.UtcNow.Ticks}";
+            <img src="@coverUrl" style="width:100px;" />
+            <p>Current cover — upload new to replace</p>
+        }
+            <label asp-for="CoverImage">Cover Image</label>
         <input asp-for="CoverImage" type="file" />
     </div>
 

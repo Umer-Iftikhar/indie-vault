@@ -37,7 +37,10 @@
                     {
                         <tr>
                             <td>
-                                <img src="@game.CoverImagePath" alt="Cover" style="width: 60px; height: 80px; object-fit: cover;" class="rounded shadow-sm" />
+                                @{
+                                    var coverUrl = $"{game.CoverImagePath}?v={DateTime.UtcNow.Ticks}";
+                                }
+                                <img src="@coverUrl" alt="Cover" style="width: 60px; height: 80px; object-fit: cover;" class="rounded shadow-sm" />
                             </td>
                             <td class="fw-bold">@game.Title</td>
                             <td>@game.Genre?.Name</td>
