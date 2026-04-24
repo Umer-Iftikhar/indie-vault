@@ -154,11 +154,18 @@
             <h4 class="fw-bold"><i class="bi bi-chat-left-text me-2"></i>Reviews (@Model.Reviews?.Count)</h4>
 
             @* Prevent owner from reviewing their own game *@
-            @if (User.Identity.IsAuthenticated && Model.DeveloperId != User.FindFirstValue(ClaimTypes.NameIdentifier))
+            @if (User.Identity.IsAuthenticated && ViewBag.IsPlayer == true && Model.DeveloperId != User.FindFirstValue(ClaimTypes.NameIdentifier))
             {
-                <a asp-controller="Reviews" asp-action="Create" asp-route-gameId="@Model.Id" class="btn btn-primary rounded-pill btn-sm px-4">
-                    Write a Review
-                </a>
+                if (ViewBag.HasReviewed == true)
+                {
+                    <span class="badge bg-success rounded-pill px-3 py-2">
+                        <i class="bi bi-check-circle me-1"></i> You've reviewed this!
+                    </span>
+                }
+                else
+                {
+                    <a asp-controller="Review"  asp-action="Create" asp-route-id="@Model.Id" class="btn btn-primary rounded-pill btn-sm px-4">Write a Review</a>
+                }
             }
         </div>
 

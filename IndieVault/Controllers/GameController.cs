@@ -3,6 +3,7 @@ using IndieVault.Data;
 using IndieVault.Models;
 using IndieVault.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -14,11 +15,13 @@ namespace IndieVault.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public GameController(AppDbContext context, IWebHostEnvironment environment)
+        public GameController(AppDbContext context, IWebHostEnvironment environment, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _environment = environment;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -280,7 +283,7 @@ namespace IndieVault.Controllers
                 }
             }
             // Update tags
-            game.GameTags.Clear();
+            game.GameTags.Clear(); 
             if (model.SelectedTags != null)
             {
                 foreach (var t in model.SelectedTags)
@@ -356,26 +359,36 @@ namespace IndieVault.Controllers
         public async Task<IActionResult> Details(int id)
         {
             
-                var game = await _context.Games
-
-                    .Include(g => g.Developer)
-                    .Include(g => g.Genre)
-                    .Include(g => g.Engine)
-                    .Include(g => g.GamePlatforms)
-                        .ThenInclude(gp => gp.Platform)
-                    .Include(g => g.GameTags)
-                        .ThenInclude(gt => gt.Tag)
-                    .Include(g => g.Screenshots)
-                    .Include(g => g.Reviews)
-                        .ThenInclude(r => r.User)
-                    .FirstOrDefaultAsync(g => g.Id == id);
+            var game = await _context.Games
+                .Include(g => g.Developer)
+                .Include(g => g.Genre)
+                .Include(g => g.Engine)
+                .Include(g => g.GamePlatforms)
+                    .ThenInclude(gp => gp.Platform)
+                .Include(g => g.GameTags)
+                    .ThenInclude(gt => gt.Tag)
+                .Include(g => g.Screenshots)
+                .Include(g => g.Reviews)
+                    .ThenInclude(r => r.User)
+                .FirstOrDefaultAsync(g => g.Id == id);
 
             if (game == null)
-                {
-                    return NotFound();
-                }
-               
-                return View(game);
+            {
+                return NotFound();
+            }
+            
+            bool hasReviewed = false;
+            bool isPlayer = User.IsInRole("Player");
+            if(User.Identity.IsAuthenticated && isPlayer)
+            {
+                var userId = _userManager.GetUserId(User);
+                hasReviewed = await _context.Reviews.AnyAsync(r => r.GameId == id && r.UserId == userId);
+            }
+
+            ViewBag.HasReviewed = hasReviewed;
+            ViewBag.IsPlayer = isPlayer;
+
+            return View(game);
         }
     }
 }
