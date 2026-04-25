@@ -135,6 +135,6 @@ namespace IndieVault.Controllers
         public IActionResult AccessDenied()
         {
             return View();
-        }
+        } 
     }
 }
