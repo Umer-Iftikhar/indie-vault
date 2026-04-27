@@ -37,7 +37,7 @@ namespace IndieVault.Controllers
                     
                   SELECT 
                     r.Name AS RoleName, 
-                    COUNT(ur.UserId) AS TotalUsers
+                    COUNT(ur.UserId) AS UserCount
                  FROM AspNetRoles r
                  INNER JOIN AspNetUserRoles ur ON r.Id = ur.RoleId
                  INNER JOIN AspNetUsers u ON ur.UserId = u.Id
@@ -54,7 +54,9 @@ namespace IndieVault.Controllers
                 TotalGames = await _context.Games.CountAsync(),
                 TotalReviews = await _context.Reviews.CountAsync(),
                 MostWishlistedGames = mostWishlistedGame!,
-                UsersByRole = userRoles.ToList()
+                UsersByRole = userRoles.ToList(),
+                Genres = await _context.Genres.OrderBy(g => g.Name).ToListAsync(),
+                Games = await _context.Games.OrderByDescending(g => g.Id).ToListAsync()
             };
             return View(adminDashboardViewModel);
         }
@@ -87,7 +89,7 @@ namespace IndieVault.Controllers
             return RedirectToAction("Dashboard");
         }
         [HttpGet]
-        public async Task<IActionResult> DeleteGenre(int genreId)
+        public async Task<IActionResult> GenreDelete(int genreId)
         {
             var genre = await _context.Genres.FindAsync(genreId);
             if (genre == null)
@@ -101,7 +103,7 @@ namespace IndieVault.Controllers
             return View(new GenreViewModel { GenreId = genre.Id, GenreName = genre.Name });
         }
         [HttpPost]
-        public async Task<IActionResult> DeleteGenre(GenreViewModel model)
+        public async Task<IActionResult> GenreDelete(GenreViewModel model)
         {
             var genre = await _context.Genres.FindAsync(model.GenreId);
             if (genre == null)

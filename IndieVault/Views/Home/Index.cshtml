@@ -5,128 +5,188 @@
     ViewData["Title"] = "Browse Indie Games";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container py-4">
+    <div class="d-flex align-items-end justify-content-between mb-4">
+        <h1 class="fw-bold mb-0">@ViewData["Title"]</h1>
+        <p class="text-muted mb-1">Discover your next favorite indie</p>
+    </div>
 
-<hr />
-
-<form asp-controller="Home" asp-action="Index" method="get" class="filter-section" style="background: #f4f4f4; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-    <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-        
-        <div>
-            <label>Search</label><br />
-            <input type="text" name="searchTerm" value="@Model.SearchTerm" placeholder="Game title..." />
-        </div>
-
-        <div>
-            <label>Genre</label><br />
-            <select name="genreId">
-                <option value="">All Genres</option>
-                @foreach (var genre in Model.Genres)
+    @* --- Featured Games Carousel --- *@
+    @if (Model.FeaturedGames.Any() && string.IsNullOrEmpty(Model.SearchTerm) && Model.CurrentPage == 1)
+    {
+        <div id="featuredCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden mb-5" data-bs-ride="carousel" style="border: 1px solid rgba(0,0,0,0.05);">
+            <div class="carousel-indicators">
+                @for (int i = 0; i < Model.FeaturedGames.Count; i++)
                 {
-                    <option value="@genre.Id" selected="@(genre.Id == Model.SelectedGenreId)">
-                        @genre.Name
-                    </option>
+                    <button type="button" data-bs-target="#featuredCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
                 }
-            </select>
-        </div>
-
-        <div>
-            <label>Price Range</label><br />
-            <input type="number" name="minPrice" value="@Model.MinPrice" placeholder="Min" style="width: 80px;" />
-            <input type="number" name="maxPrice" value="@Model.MaxPrice" placeholder="Max" style="width: 80px;" />
-        </div>
-
-        <div>
-            <label>Sort By</label><br />
-            <select name="sortBy">
-                <option value="Newest" selected="@(Model.SortBy == IndieVault.Enums.SortBy.Newest)">Newest</option>
-                <option value="Rating" selected="@(Model.SortBy == IndieVault.Enums.SortBy.Rating)">Highest Rated</option>
-                <option value="PriceAsc" selected="@(Model.SortBy == IndieVault.Enums.SortBy.PriceAsc)">Price: Low to High</option>
-                <option value="PriceDesc" selected="@(Model.SortBy == IndieVault.Enums.SortBy.PriceDesc)">Price: High to Low</option>
-            </select>
-        </div>
-    </div>
-
-    <div style="margin-top: 15px;">
-        <label><strong>Platforms:</strong></label><br />
-        @foreach (var platform in Model.Platforms)
-        {
-            <div style="display: inline-block; margin-right: 15px;">
-                <input type="checkbox" name="platformIds" value="@platform.Id"
-                @(Model.SelectedPlatformsId.Contains(platform.Id) ? "checked" : "") />
-                <span>@platform.Name</span>
             </div>
-        }
-    </div>
+            <div class="carousel-inner">
+                @for (int i = 0; i < Model.FeaturedGames.Count; i++)
+                {
+                    var game = Model.FeaturedGames[i];
+                    <div class="carousel-item @(i == 0 ? "active" : "")" style="height: 480px;">
+                        <img src="@game.CoverImagePath" class="d-block w-100 h-100" style="object-fit: cover; filter: brightness(0.55);" alt="@game.Title">
+                        <div class="carousel-caption d-none d-md-block text-start p-4 mb-4 rounded-4" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); max-width: 600px; border: 1px solid rgba(255,255,255,0.2);">
+                            <span class="badge bg-warning text-dark mb-2 text-uppercase fw-bold" style="letter-spacing: 1px;">Featured Indie</span>
+                            <h1 class="display-5 fw-bold text-white">@game.Title</h1>
+                            <p class="lead text-white-50">@game.GenreName • By <strong>@game.Developer</strong></p>
+                            <div class="d-flex align-items-center gap-3">
+                                <h2 class="mb-0 text-white fw-bold">@(game.Price == 0 ? "FREE" : $"${game.Price}")</h2>
+                                <div class="text-warning border border-warning px-2 py-1 rounded small">
+                                    <i class="bi bi-star-fill"></i> @game.AverageRating.ToString("0.0")
+                                </div>
+                                <a asp-controller="Game" asp-action="Details" asp-route-id="@game.Id" class="btn btn-primary px-4 fw-bold">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon p-3 bg-dark rounded-circle" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon p-3 bg-dark rounded-circle" aria-hidden="true"></span>
+            </button>
+        </div>
+    }
 
-    <div style="margin-top: 15px;">
-        <button type="submit" style="padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Apply Filters
-        </button>
-        <a asp-action="Index" style="margin-left: 10px; text-decoration: none; color: #666;">Clear All</a>
-    </div>
-</form>
+    @* --- Modernized Filter Section --- *@
+    <form asp-controller="Home" asp-action="Index" method="get" class="filter-section shadow-sm border-0" style="background: #ffffff; padding: 25px; border-radius: 12px; margin-bottom: 40px; border: 1px solid #eee !important;">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-secondary small">SEARCH</label>
+                <input type="text" name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="Game title..." />
+            </div>
 
-@if (Model.Games != null && Model.Games.Any())
-{
-    <table class="table table-hover align-middle" style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr style="text-align: left; border-bottom: 2px solid #ddd;">
-                <th>Cover</th>
-                <th>Title</th>
-                <th>Genre</th>
-                <th>Price</th>
-                <th>Developer</th>
-                <th>Release Date</th>
-                <th>Rating</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var game in Model.Games)
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-secondary small">GENRE</label>
+                <select name="genreId" class="form-select">
+                    <option value="">All Genres</option>
+                    @foreach (var genre in Model.Genres)
+                    {
+                        <option value="@genre.Id" selected="@(genre.Id == Model.SelectedGenreId)">@genre.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-secondary small">PRICE RANGE</label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" name="minPrice" value="@Model.MinPrice" placeholder="Min" class="form-control" />
+                    <input type="number" name="maxPrice" value="@Model.MaxPrice" placeholder="Max" class="form-control" />
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold text-secondary small">SORT BY</label>
+                <select name="sortBy" class="form-select">
+                    <option value="Newest" selected="@(Model.SortBy == IndieVault.Enums.SortBy.Newest)">Newest</option>
+                    <option value="Rating" selected="@(Model.SortBy == IndieVault.Enums.SortBy.Rating)">Highest Rated</option>
+                    <option value="PriceAsc" selected="@(Model.SortBy == IndieVault.Enums.SortBy.PriceAsc)">Price: Low to High</option>
+                    <option value="PriceDesc" selected="@(Model.SortBy == IndieVault.Enums.SortBy.PriceDesc)">Price: High to Low</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-top">
+            <label class="form-label fw-bold text-secondary small d-block mb-2">PLATFORMS</label>
+            <div class="d-flex flex-wrap gap-3">
+                @foreach (var platform in Model.Platforms)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="platformIds" value="@platform.Id" id="plat_@platform.Id"
+                        @(Model.SelectedPlatformsId.Contains(platform.Id) ? "checked" : "") />
+                        <label class="form-check-label text-muted" for="plat_@platform.Id">@platform.Name</label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary px-4 fw-bold">Apply Filters</button>
+            <a asp-action="Index" class="btn btn-link text-muted text-decoration-none">Reset All</a>
+        </div>
+    </form>
+
+    @* --- Polished Results Table --- *@
+    @if (Model.Games != null && Model.Games.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="text-secondary small text-uppercase">
+                        <th class="ps-4">Cover</th>
+                        <th>Title</th>
+                        <th>Genre</th>
+                        <th>Price</th>
+                        <th>Developer</th>
+                        <th>Release</th>
+                        <th class="pe-4">Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var game in Model.Games)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <img src="@game.CoverImagePath" alt="@game.Title" width="70" class="rounded-3 shadow-sm" style="aspect-ratio: 16/9; object-fit: cover;" />
+                            </td>
+                            <td>
+                                <strong><a asp-controller="Game" asp-action="Details" asp-route-id="@game.Id" class="text-decoration-none text-dark">@game.Title</a></strong>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">@game.GenreName</span></td>
+                            <td class="fw-bold text-primary">@(game.Price == 0 ? "Free" : $"${game.Price}")</td>
+                            <td class="text-muted">@game.Developer</td>
+                            <td class="text-muted">@game.ReleaseDate.ToString("MMM yyyy")</td>
+                            <td class="pe-4">
+                                <span class="badge rounded-pill bg-warning text-dark px-3 py-2">
+                                    <i class="bi bi-star-fill me-1"></i> @game.AverageRatings.ToString("0.0")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center my-5 p-5 bg-light rounded-4 border-2 border-dashed">
+            <i class="bi bi-search text-muted display-1"></i>
+            <h3 class="mt-4">No indies found</h3>
+            <p class="text-muted">Try removing some filters or searching for something else.</p>
+            <a asp-action="Index" class="btn btn-outline-primary mt-3 px-4">Reset Filters</a>
+        </div>
+    }
+
+    @* --- Pagination --- *@
+    <nav aria-label="Page navigation" class="mt-5">
+        <ul class="pagination pagination-md justify-content-center">
+            @for (int i = 1; i <= Model.TotalPages; i++)
             {
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td><img src="@game.CoverImagePath" alt="@game.Title" width="80" style="border-radius: 4px;" /></td>
-                    <td><strong><a asp-controller="Game" asp-action="Details" asp-route-id="@game.Id" class="text-decoration-none text-primary">@game.Title </a></strong></td>
-                    <td>@game.GenreName</td>
-                    <td>@(game.Price == 0 ? "Free" : $"${game.Price}")</td>
-                    <td>@game.Developer</td>
-                    <td>@game.ReleaseDate.ToString("MMM dd, yyyy")</td>
-                    <td>
-                        <span class="badge rounded-pill bg-warning text-dark">
-                            <i class="bi bi-star-fill"></i> @game.AverageRatings.ToString("0.0")
-                        </span>
-                    </td>
-                </tr>
+                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                    <a class="page-link shadow-sm border-0 mx-1 rounded-3" 
+                       href="@Url.Action("Index", new { 
+                            pageNumber = i, 
+                            searchTerm = Model.SearchTerm, 
+                            genreId = Model.SelectedGenreId, 
+                            platformIds = Model.SelectedPlatformsId,
+                            minPrice = Model.MinPrice, 
+                            maxPrice = Model.MaxPrice, 
+                            sortBy = Model.SortBy 
+                       })">@i</a>
+                </li>
             }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="text-center my-5 p-5" style="background: #fcfcfc; border: 2px dashed #ddd; border-radius: 8px;">
-        <i class="bi bi-search" style="font-size: 3rem; color: #ccc;"></i>
-        <h3 class="mt-3">No games found</h3>
-        <p class="text-muted">We couldn't find any games matching your current filters. Try adjusting your search or price range.</p>
-        <a asp-action="Index" class="btn btn-outline-secondary mt-2">Reset All Filters</a>
-    </div>
-}
+        </ul>
+    </nav>
+</div>
 
-<nav aria-label="Page navigation">
-    <ul class="pagination justify-content-center mt-4">
-        @for (int i = 1; i <= Model.TotalPages; i++)
-        {
-            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                <a class="page-link" 
-                   href="@Url.Action("Index", new { 
-                        pageNumber = i, 
-                        searchTerm = Model.SearchTerm, 
-                        genreId = Model.SelectedGenreId, 
-                        platformIds = Model.SelectedPlatformsId,
-                        minPrice = Model.MinPrice, 
-                        maxPrice = Model.MaxPrice, 
-                        sortBy = Model.SortBy 
-                   })">@i</a>
-            </li>
-        }
-    </ul>
-</nav>
+<style>
+    .page-item.active .page-link { background-color: #0d6efd; }
+    .table tbody tr { transition: background 0.2s; }
+    .table tbody tr:hover { background-color: rgba(13, 110, 253, 0.03); }
+    .carousel-caption { bottom: 3rem; }
+    .form-control:focus, .form-select:focus { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); border-color: #0d6efd; }
+</style>

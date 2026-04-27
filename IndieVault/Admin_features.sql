@@ -15,3 +15,15 @@ FROM AspNetRoles r
 INNER JOIN AspNetUserRoles ur ON r.Id = ur.RoleId
 INNER JOIN AspNetUsers u ON ur.UserId = u.Id
 GROUP BY r.Name;
+
+select g.Title, g.CoverImagePath, gen.Name as GenreName, g.Price, COALESCE(AVG(re.Rating), 0) AS AverageRating, g.Id,
+(
+	select u.UserName
+    from  aspnetusers u
+    where u.Id = g.DeveloperId
+) AS Developer
+from Games g
+left Join genres gen ON g.GenreId = gen.Id
+Left Join reviews re  ON g.Id = re.GameId 
+where g.IsFeatured = true
+group by g.Id, g.Title, g.CoverImagePath, gen.Name , g.Price, g.DeveloperId;

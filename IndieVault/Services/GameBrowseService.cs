@@ -12,11 +12,14 @@ namespace IndieVault.Services
         {
             _configuration = configuration;
         }
-        public async Task<(List<GameBrowseDto> Games, int TotalCount)> GetBrowseGamesAsync(int pageNumber, int pageSize, string? searchTerm, decimal? minPrice, decimal? maxPrice, int? genreId, List<int>? platformIds, SortBy sortBy)
+        private MySqlConnection CreateConnection()
         {
             var connectionString = _configuration.GetConnectionString("DefaultConnection");
-            using var connection = new MySqlConnection(connectionString);
-
+            return new MySqlConnection(connectionString);
+        }
+        public async Task<(List<GameBrowseDto> Games, int TotalCount)> GetBrowseGamesAsync(int pageNumber, int pageSize, string? searchTerm, decimal? minPrice, decimal? maxPrice, int? genreId, List<int>? platformIds, SortBy sortBy)
+        {
+            using var connection = CreateConnection();
             // Dapper handles List<int> automatically for IN clauses
             var platformParam = (platformIds == null || !platformIds.Any()) ? null : platformIds;
             var platformFilter = (platformParam == null)
@@ -77,6 +80,26 @@ namespace IndieVault.Services
                 var totalCount = await multi.ReadFirstAsync<int>();
                 return (games, totalCount);
             }
+        }
+        public async Task<IEnumerable<FeaturedGameDto>> GetFeaturedGamesAsync()
+        {
+            using var connection = CreateConnection();
+
+            var sql = @"
+                        select g.Title, g.CoverImagePath, gen.Name as GenreName, g.Price, COALESCE(AVG(re.Rating), 0) AS AverageRating, g.Id,
+                        (
+	                        select u.UserName
+                            from  aspnetusers u
+                            where u.Id = g.DeveloperId
+                        ) AS Developer
+                        from Games g
+                        left Join genres gen ON g.GenreId = gen.Id
+                        Left Join reviews re  ON g.Id = re.GameId 
+                        where g.IsFeatured = true
+                        group by g.Id, g.Title, g.CoverImagePath, gen.Name , g.Price, g.DeveloperId;";
+
+            var result = await connection.QueryAsync<FeaturedGameDto>(sql);
+            return result;
         }
     }
 }

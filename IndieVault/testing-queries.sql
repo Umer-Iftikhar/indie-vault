@@ -88,8 +88,11 @@ SELECT Id, Title, CoverImagePath FROM games WHERE Title = 'GTA V';
 select count(*) from games;
 
 INSERT INTO tags (Name) VALUES ('Console');
+SELECT Id FROM tags WHERE Name = 'Console';
 
 SELECT t.Name, COUNT(gt.GameId) as GameCount 
 FROM tags t
 LEFT JOIN gametags gt ON t.Id = gt.TagId
 GROUP BY t.Name;
+
+SHOW CREATE TABLE Genres;

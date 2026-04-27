@@ -10,7 +10,7 @@ namespace IndieVault.ViewModels
         public int CurrentPage { get; set; }
         public int TotalCount { get; set; }
         public int TotalPages { get; set; }
-
+        public List<FeaturedGameDto> FeaturedGames { get; set; } = new List<FeaturedGameDto>();
         public List<Genre> Genres { get; set; } = new List<Genre>();
         public List <Platform> Platforms { get; set; } = new List<Platform>();
         public int? SelectedGenreId { get; set; }

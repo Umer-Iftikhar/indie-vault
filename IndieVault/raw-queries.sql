@@ -94,3 +94,21 @@ WHERE
         WHERE gp.GameId = g.Id AND gp.PlatformId = @PlatformId
     ));
 
+-- Fixing coverimage
+
+UPDATE Games SET CoverImagePath = CONCAT('https://picsum.photos/seed/', Id, '/800/600');
+SELECT Id, CoverImagePath FROM Games LIMIT 5;
+SELECT CoverImagePath FROM Games LIMIT 3;
+
+SELECT COUNT(*) FROM Games WHERE CoverImagePath LIKE '%placeholder%';
+
+UPDATE Games 
+SET CoverImagePath = CONCAT('https://picsum.photos/seed/', Id, '/800/600')
+WHERE CoverImagePath LIKE '%placeholder%';
+
+SET SQL_SAFE_UPDATES = 0;
+UPDATE Games SET CoverImagePath = CONCAT('https://picsum.photos/seed/', Id, '/800/600') WHERE CoverImagePath LIKE '%placeholder%';
+SET SQL_SAFE_UPDATES = 1;
+
+UPDATE Games SET CoverImagePath = CONCAT('https://picsum.photos/seed/', Id, '/800/600') WHERE CoverImagePath LIKE '%placeholder%';
+SET SQL_SAFE_UPDATES = 1;

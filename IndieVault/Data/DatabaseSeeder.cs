@@ -223,7 +223,7 @@ namespace IndieVault.Data
             var faker = new Faker();
             foreach (var game in games)
             {
-                var selectedPlatforms = faker.PickRandom(platforms, faker.Random.Int(1, 3)); // Pick 1 to 3 UNIQUE platforms for THIS specific game
+                var selectedPlatforms = faker.PickRandom(platforms, faker.Random.Int(1, 3)); // unique platform pick karo (1 to 3 total per game)
                 foreach (var platform in selectedPlatforms)
                 {
                     gamePlatforms.Add(new GamePlatform
@@ -248,7 +248,7 @@ namespace IndieVault.Data
             var faker = new Faker();
             foreach (var game in games)
             {
-                var selectedTags = faker.PickRandom(tags, faker.Random.Int(1, 5)); // Pick 1 to 5 UNIQUE tags for THIS specific game
+                var selectedTags = faker.PickRandom(tags, faker.Random.Int(1, 5)); 
                 foreach (var tag in selectedTags)
                 {
                     gameTags.Add(new GameTag
@@ -272,7 +272,7 @@ namespace IndieVault.Data
             var faker = new Faker();
             foreach (var game in games)
             {
-                int reviewCount = faker.Random.Int(1, 5); // With 10 players total, picking 1-5 ensures some games are popular
+                int reviewCount = faker.Random.Int(1, 5); 
                                                           
                 var selectedReviewers = faker.PickRandom(playerIds, reviewCount); // 2. The Constraint Guard: Pick unique users for THIS specific game
                 foreach (var playerId in selectedReviewers)

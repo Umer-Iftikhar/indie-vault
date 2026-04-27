@@ -1,0 +1,177 @@
+﻿@model IndieVault.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0"><i class="bi bi-shield-check text-primary me-2"></i>Admin Dashboard</h1>
+            <p class="text-muted">Overview and management for IndieVault</p>
+        </div>
+        <div class="card border-0 shadow-sm px-3 py-2">
+            <span class="text-muted small">Welcome, <strong class="text-dark">@Model.AdminName</strong></span>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-primary text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase opacity-75 small fw-bold">Total Games</h6>
+                    <h2 class="display-6 fw-bold mb-0">@Model.TotalGames</h2>
+                    <i class="bi bi-controller position-absolute top-50 end-0 translate-middle opacity-25 h1"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-uppercase opacity-75 small fw-bold">Total Reviews</h6>
+                    <h2 class="display-6 fw-bold mb-0">@Model.TotalReviews</h2>
+                    <i class="bi bi-chat-square-quote position-absolute top-50 end-0 translate-middle opacity-25 h1"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm bg-dark text-white h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="card-title text-uppercase opacity-75 small fw-bold text-info">Most Wishlisted Game</h6>
+                        <h4 class="mb-0">@(Model.MostWishlistedGames?.Title ?? "No Data")</h4>
+                        <span class="text-info small"><i class="bi bi-heart-fill me-1"></i>@Model.MostWishlistedGames?.WishlistCount Saves</span>
+                    </div>
+                    <i class="bi bi-trophy text-warning display-4 mb-0"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent py-3 border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>User Distribution</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var role in Model.UsersByRole)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                <span class="fw-medium">@role.RoleName</span>
+                                <span class="badge bg-primary rounded-pill">@role.UserCount</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-tags me-2 text-primary"></i>Genre Management</h5>
+                    <a asp-controller="Admin" asp-action="CreateGenre" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-lg me-1"></i>New Genre
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th class="ps-4">Genre Name</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var genre in Model.Genres)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-bold">@genre.Name</td>
+                                        <td class="text-end pe-4">
+                                            <a asp-controller="Admin" asp-action="DeleteGenre" asp-route-genreId="@genre.Id" class="btn btn-sm btn-light text-danger border">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent py-3 border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-star me-2 text-primary"></i>Feature/Unfeature Games</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Game Title</th>
+                                    <th>Feature Status</th>
+                                    <th class="text-end pe-4">Toggle Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var game in Model.Games)
+                                {
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="fw-bold">@game.Title</div>
+                                            <small class="text-muted">ID: #@game.Id</small>
+                                        </td>
+                                        <td>
+                                            @if (game.IsFeatured)
+                                            {
+                                                <span class="badge bg-warning text-dark"><i class="bi bi-lightning-fill me-1"></i>Featured</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-muted border">Standard</span>
+                                            }
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <form asp-controller="Admin" asp-action="ToggleFeature" method="post">
+                                                <input type="hidden" name="gameId" value="@game.Id" />
+                                                <button type="submit" class="btn btn-sm @(game.IsFeatured ? "btn-danger" : "btn-primary") shadow-sm" style="width: 110px;">
+                                                    @(game.IsFeatured ? "Unfeature" : "Feature")
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Optional: Custom scrollbar for the table */
+    .table-responsive::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background-color: #dee2e6;
+        border-radius: 10px;
+    }
+
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+</style>

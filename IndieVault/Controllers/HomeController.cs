@@ -26,6 +26,7 @@ namespace IndieVault.Controllers
             var (games, totalCount) = await _gameBrowseService.GetBrowseGamesAsync(pageNumber, pageSize, searchTerm, minPrice, maxPrice, genreId, platformIds, sortBy);
             var genres = await _context.Genres.ToListAsync();
             var platforms = await _context.Platforms.ToListAsync();
+            var featuredGames = await _gameBrowseService.GetFeaturedGamesAsync();
             var viewModel = new GameBrowseViewModel
             {
                 Games = games,
@@ -39,7 +40,8 @@ namespace IndieVault.Controllers
                 SelectedPlatformsId = platformIds ?? new List<int>(),
                 SortBy = sortBy,
                 Genres = genres,
-                Platforms = platforms
+                Platforms = platforms,
+                FeaturedGames = featuredGames.ToList(),
             };
 
             return View(viewModel);

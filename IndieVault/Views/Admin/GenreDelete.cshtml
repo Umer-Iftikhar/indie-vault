@@ -1,0 +1,51 @@
+﻿@model IndieVault.ViewModels.GenreViewModel
+
+@{
+    ViewData["Title"] = "Delete Genre";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Deletion</h3>
+                </div>
+                <div class="card-body">
+                    
+                    @* Display error message if the genre is linked to games *@
+                    @if (!string.IsNullOrEmpty(Model.Message))
+                    {
+                        <div class="alert alert-danger d-flex align-items-center" role="alert">
+                            <i class="bi bi-slash-circle-fill me-2"></i>
+                            <div>@Model.Message</div>
+                        </div>
+                    }
+
+                    <p class="lead">Are you sure you want to delete the genre: <strong>@Model.GenreName</strong>?</p>
+                    
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-info-circle me-1"></i> This action cannot be undone.
+                    </div>
+
+                    <form asp-action="GenreDelete" method="post">
+                        @* Crucial: Hidden input for ID so the Post method knows which one to delete *@
+                        <input type="hidden" asp-for="GenreId" />
+                        <input type="hidden" asp-for="GenreName" />
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a asp-action="Dashboard" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            
+                            @* Disable button if there is a blocking message *@
+                            <button type="submit" class="btn btn-danger" @(string.IsNullOrEmpty(Model.Message) ? "" : "disabled")>
+                                <i class="bi bi-trash"></i> Permanently Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
