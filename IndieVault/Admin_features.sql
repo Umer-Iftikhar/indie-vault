@@ -1,5 +1,5 @@
 use indiegameplatform;
--- --------------- Admin Ka Kaam --------------
+-- ------------ Admin Ka Kaam --------------
 
 SELECT g.Title, COUNT(*) as WishlistCount
 FROM Wishlists w

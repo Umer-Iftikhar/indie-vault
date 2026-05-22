@@ -20,6 +20,25 @@ and admins can manage the platform.
 - Global exception handling with file logging
 - Custom 404 and 500 error pages
 
+## Screenshots
+
+### Discovery (Home & Search)
+![Home](screenshots/home_screen.png)
+
+### Game Details
+![Details](screenshots/Game-Details.png)
+
+### Player Interaction
+![Empty_Wishlist](screenshots/Empty_Wishlist.png)
+![Wishlist](screenshots/Wishlist.png)
+
+### Developer Experience
+![Dashboard](screenshots/Dev_Profile.png)
+![Upload](screenshots/Game_Upload.png)
+
+### Admin Panel
+![Admin](screenshots/Admin-Dashboard.png)
+
 ## Technologies
 - ASP.NET Core 9 MVC
 - Entity Framework Core (Code-First)
