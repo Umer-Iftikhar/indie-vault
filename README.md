@@ -37,7 +37,7 @@ and admins can manage the platform.
 ![Upload](screenshots/Game_Upload.png)
 
 ### Admin Panel
-![Admin](screenshots/Admin-Dashboard.png)
+![Admin](screenshots/Admin_Dashboard.png)
 
 ## Technologies
 - ASP.NET Core 9 MVC
