@@ -4,6 +4,13 @@ A full-stack ASP.NET Core MVC web application where indie game developers
 can showcase their work, players can discover and download games, 
 and admins can manage the platform.
 
+## ⚠️ Project Status
+- Main branch: Active development (may contain incomplete or changing features)
+- Stable version: v0.8 (tagged release)
+
+## 📌 Stable Release
+[https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-8-complete](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-8-complete)
+
 ## Roles
 - **Game Dev** — upload, edit, and manage their own games
 - **Player** — browse, wishlist, download, and review games
@@ -20,13 +27,20 @@ and admins can manage the platform.
 - Global exception handling with file logging
 - Custom 404 and 500 error pages
 
+## 🚀 Quick Overview
+- Browse games without login
+- Register as Player or Developer
+- Developers can upload and manage games
+- Players can wishlist and review games
+- Admin can manage platform content
+
 ## Screenshots
 
 ### Discovery (Home & Search)
 ![Home](screenshots/home_screen.png)
 
 ### Game Details
-![Details](screenshots/Game-Details.png)
+![Details](screenshots/Game_Details.png)
 
 ### Player Interaction
 ![Empty_Wishlist](screenshots/Empty_Wishlist.png)
@@ -67,10 +81,9 @@ and admins can manage the platform.
 - Visual Studio 2026
 
 ### Steps
-1. Clone the repository
-   git clone:
+1. Clone the repository:
    ```
-   https://github.com/Umer-Iftikhar/indie-vault
+   git clone https://github.com/Umer-Iftikhar/indie-vault
    ```
 
 2. Restore dependencies:
