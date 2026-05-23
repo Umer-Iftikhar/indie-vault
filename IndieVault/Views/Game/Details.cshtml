@@ -1,4 +1,4 @@
-﻿@model IndieVault.Models.Game
+﻿@model IndieVault.DTOs.GameDetailDto
 @using System.Security.Claims
 
 @{
@@ -19,7 +19,7 @@
                         <i class="bi bi-person-badge me-1"></i> Developed by:
                         <strong>
                             <a asp-controller="Account" asp-action="Profile" asp-route-userId="@Model.DeveloperId" class="iv-link-highlight">
-                                @Model.Developer?.UserName
+                                    @Model.DeveloperName
                             </a>
                         </strong>
                     </p>
@@ -27,7 +27,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h3 class="iv-price-tag mb-0">@(Model.Price == 0 ? "Free" : $"${Model.Price}")</h3>
                         <span class="iv-badge-glass">
-                            <i class="bi bi-controller me-1"></i> @Model.Genre?.Name
+                                <i class="bi bi-controller me-1"></i> @Model.GenreName
                         </span>
                     </div>
 
@@ -35,7 +35,7 @@
                         <div class="d-grid gap-2">
                             @if (!string.IsNullOrEmpty(Model.DownloadLink))
                             {
-                                <form asp-controller="Download" asp-action="Download" asp-route-id="@Model.Id" method="post">
+                                <form asp-controller="Download" asp-action="Download" asp-route-id="@Model.GameId" method="post">
                                     <button type="submit" class="iv-btn-primary w-100">
                                         <i class="bi bi-download me-2"></i> Get Game
                                     </button>
@@ -47,15 +47,14 @@
                                     <i class="bi bi-clock-history me-2"></i> Coming Soon
                                 </button>
                             }
-                            
-                            @if (User.Identity!.IsAuthenticated && ViewBag.IsPlayer == true)
+                                       @if (User.Identity!.IsAuthenticated && User.IsInRole("Player"))
                             {
                                 <button id="wishlistBtn"
-                                        data-game-id="@Model.Id"
-                                        data-wishlisted="@ViewBag.IsWishlisted.ToString().ToLower()"
-                                        class="iv-btn-wishlist @(ViewBag.IsWishlisted ? "active" : "")">
-                                    <i class="bi @(ViewBag.IsWishlisted ? "bi-heart-fill" : "bi-heart") me-2"></i>
-                                    <span id="wishlistText">@(ViewBag.IsWishlisted ? "In Wishlist" : "Add to Wishlist")</span>
+                                        data-game-id="@Model.GameId"
+                                            data-wishlisted="@Model.HasWishlisted.ToString().ToLower()"
+                                        class="iv-btn-wishlist @(Model.HasWishlisted ? "active" : "")">
+                                        <i class="bi @(Model.HasWishlisted ? "bi-heart-fill" : "bi-heart") me-2"></i>
+                                        <span id="wishlistText">@(Model.HasWishlisted ? "In Wishlist" : "Add to Wishlist")</span>
                                 </button>
                             }
                         </div>
@@ -69,14 +68,14 @@
             <!-- Specification Container -->
             <div class="spec-container mt-4 shadow-lg">
                 <h6 class="spec-header"><i class="bi bi-info-circle me-2"></i>Specifications</h6>
-                <p class="mb-2 small"><span class="spec-label">Engine:</span> <span class="spec-value">@(Model.Engine?.Name ?? "Custom")</span></p>
+                <p class="mb-2 small"><span class="spec-label">Engine:</span> <span class="spec-value">@(Model.EngineName ?? "Custom")</span></p>
                 <p class="mb-3 small"><span class="spec-label">Released:</span> <span class="spec-value">@Model.ReleaseDate.ToString("MMM dd, yyyy")</span></p>
 
                 <h6 class="spec-label-header small">Platforms</h6>
                 <div class="d-flex flex-wrap gap-2">
-                    @foreach (var gp in Model.GamePlatforms)
+                        @foreach (var gp in Model.PlatformNames)
                     {
-                        <span class="iv-badge-dark">@gp.Platform.Name</span>
+                        <span class="iv-badge-dark">@gp</span>
                     }
                 </div>
             </div>
@@ -109,9 +108,9 @@
                 </div>
 
                 <div class="mt-4">
-                    @foreach (var gt in Model.GameTags)
+                    @foreach (var gt in Model.Tags)
                     {
-                        <span class="iv-tag-pill">#@gt.Tag.Name</span>
+                        <span class="iv-tag-pill">#@gt</span>
                     }
                 </div>
             </div>
@@ -131,9 +130,9 @@
                         <span class="iv-text-dim fw-normal ms-1">(@(Model.Reviews?.Count ?? 0))</span>
                     </h4>
 
-                    @if (User.Identity.IsAuthenticated && ViewBag.IsPlayer == true && Model.DeveloperId != User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier))
+                    @if (User.Identity.IsAuthenticated && User.IsInRole("Player") && Model.DeveloperId != User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier))
                     {
-                        if (ViewBag.HasReviewed == true)
+                        if (Model.HasReviewed == true)
                         {
                             <span class="iv-badge-success">
                                 <i class="bi bi-check-circle me-1"></i> You've reviewed this!
@@ -141,7 +140,7 @@
                         }
                         else
                         {
-                            <a asp-controller="Review" asp-action="Create" asp-route-id="@Model.Id" class="iv-btn-primary btn-sm px-4">Write a Review</a>
+                            <a asp-controller="Review" asp-action="Create" asp-route-id="@Model.GameId" class="iv-btn-primary btn-sm px-4">Write a Review</a>
                         }
                     }
                 </div>
@@ -153,7 +152,7 @@
                         <div class="iv-review-item mb-3">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <h6 class="mb-0 fw-bold">@review.User?.UserName</h6>
+                                    <h6 class="mb-0 fw-bold">@review.ReviewerName</h6>
                                     <div class="text-warning small my-1">
                                         @for (int i = 1; i <= 5; i++)
                                         {
@@ -165,7 +164,7 @@
                                     <small class="iv-text-dim">
                                         <i class="bi bi-calendar3 me-1"></i> @review.ReviewDate.ToString("MMM dd, yyyy")
                                     </small>
-                                    @if (User.Identity.IsAuthenticated && (User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) == review.UserId || User.IsInRole("Admin")))
+                                    @* @if (User.Identity.IsAuthenticated && (User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier) == review.UserId || User.IsInRole("Admin")))
                                     {
                                         <form asp-controller="Review" asp-action="Delete" asp-route-id="@review.Id" method="post"
                                               onsubmit="return confirm('Are you sure you want to delete this review?');">
@@ -173,7 +172,7 @@
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
-                                    }
+                                    } *@
                                 </div>
                             </div>
                             <p class="mt-2 mb-0 iv-text-description">@review.Comment</p>

@@ -14,7 +14,5 @@
         public int SelectedEngineId { get; set; } 
         public List<int> SelectedPlatformIds { get; set; } = new List<int>();
         public List<int> SelectedTagIds { get; set; } = new List<int>();
-        // Lookup data for dropdowns and selection lists
-        public GameFormDataDto FormData { get; set; } = new GameFormDataDto();
     }
 }

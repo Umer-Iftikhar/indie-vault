@@ -1,4 +1,4 @@
-﻿@model IEnumerable<IndieVault.Models.Game>
+﻿@model IEnumerable<IndieVault.DTOs.MyGameDto>
 
 @{
     ViewData["Title"] = "My Games";
@@ -45,8 +45,8 @@
                                 <img src="@($"{game.CoverImagePath}?v={DateTime.UtcNow.Ticks}")" alt="Cover" class="table-game-cover" />
                             </td>
                             <td class="fw-bold text-white">@game.Title</td>
-                            <td><span class="badge-dark">@game.Genre?.Name</span></td>
-                            <td class="text-muted">@game.Engine?.Name</td>
+                            <td><span class="badge-dark">@game.GenreName</span></td>
+                            <td class="text-muted">@game.Engine</td>
                             <td class="text-accent">@(game.Price == 0 ? "Free" : $"${game.Price}")</td>
                             <td>
                                 <div class="action-buttons">

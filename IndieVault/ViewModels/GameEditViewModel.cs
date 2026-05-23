@@ -1,9 +1,10 @@
-﻿using IndieVault.Models;
+﻿using IndieVault.DTOs;
+using IndieVault.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace IndieVault.ViewModels
 {
-    public class GameEditViewModel
+    public class GameEditViewModel : GameFormViewModel
     {
         public int Id { get; set; }
 
@@ -26,17 +27,12 @@ namespace IndieVault.ViewModels
 
         public List<IFormFile>? Screenshots { get; set; }
 
-        public List<Genre> Genres { get; set; } = new();
-
-        public List<Engine> Engines { get; set; } = new();
 
         [Range(1, int.MaxValue, ErrorMessage = "Please select a genre.")]
         public int SelectedGenreId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Please select an engine.")]
         public int SelectedEngineId { get; set; }
-
-        public List<Platform> Platforms { get; set; } = new();
 
         public List<string> SelectedPlatforms { get; set; } = new();
 
@@ -46,8 +42,6 @@ namespace IndieVault.ViewModels
         [Required]
         [DataType(DataType.Date)]
         public DateTime ReleaseDate { get; set; }
-
-        public List<Tag> Tags { get; set; } = new();
 
         public List<string> SelectedTags { get; set; } = new();
     }

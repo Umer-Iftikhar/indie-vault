@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IndieVault.ViewModels
 {
-    public class GameUploadViewModel
+    public class GameUploadViewModel : GameFormViewModel
     {
         [Required]
         public string Title { get; set; } = string.Empty;
@@ -24,17 +24,11 @@ namespace IndieVault.ViewModels
         [DataType(DataType.Upload)]
         public List<IFormFile>? Screenshots { get; set; }
 
-        public List<LookupDto> Genres { get; set; } = new();
-
-        public List<LookupDto> Engines { get; set; } = new();
-
         [Range(1, int.MaxValue, ErrorMessage = "Please select a genre.")]
         public int SelectedGenreId { get; set; }
 
         [Range(1, int.MaxValue, ErrorMessage = "Please select an engine.")]
         public int SelectedEngineId { get; set; }
-
-        public List<LookupDto> Platforms { get; set; } = new();
 
         public List<string> SelectedPlatforms { get; set; } = new();
 
@@ -44,8 +38,6 @@ namespace IndieVault.ViewModels
         [Required]
         [DataType(DataType.Date)]
         public DateTime ReleaseDate { get; set; } 
-
-        public List<LookupDto> Tags { get; set; } = new();
 
         public List<string> SelectedTags { get; set; } = new();
     }
