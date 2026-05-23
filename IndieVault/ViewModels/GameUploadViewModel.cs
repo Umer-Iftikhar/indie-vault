@@ -1,4 +1,4 @@
-﻿using IndieVault.Models;
+﻿using IndieVault.DTOs;
 using System.ComponentModel.DataAnnotations;
 
 
@@ -25,9 +25,9 @@ namespace IndieVault.ViewModels
         [DataType(DataType.Upload)]
         public List<IFormFile>? Screenshots { get; set; }
 
-        public List<Genre> Genres { get; set; } = new();
+        public List<LookupDto> Genres { get; set; } = new();
 
-        public List<Engine> Engines { get; set; } = new();
+        public List<LookupDto> Engines { get; set; } = new();
 
         [Range(1, int.MaxValue, ErrorMessage = "Please select a genre.")]
         public int SelectedGenreId { get; set; }
@@ -35,7 +35,7 @@ namespace IndieVault.ViewModels
         [Range(1, int.MaxValue, ErrorMessage = "Please select an engine.")]
         public int SelectedEngineId { get; set; }
 
-        public List<Platform> Platforms { get; set; } = new();
+        public List<LookupDto> Platforms { get; set; } = new();
 
         public List<string> SelectedPlatforms { get; set; } = new();
 
@@ -46,7 +46,7 @@ namespace IndieVault.ViewModels
         [DataType(DataType.Date)]
         public DateTime ReleaseDate { get; set; } 
 
-        public List<Tag> Tags { get; set; } = new();
+        public List<LookupDto> Tags { get; set; } = new();
 
         public List<string> SelectedTags { get; set; } = new();
     }

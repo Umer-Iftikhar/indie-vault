@@ -2,14 +2,16 @@ using IndieVault.Data;
 using IndieVault.Extensions;
 using IndieVault.Models;
 using IndieVault.Services;
+using IndieVault.Services.Implementations;
+using IndieVault.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<GameBrowseService>();
+builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddHttpClient<IGitHubService, GitHubService>(httpClient =>
 {
     httpClient.BaseAddress = new Uri("https://api.github.com/");
@@ -45,6 +47,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 })
 .AddEntityFrameworkStores<IndieVault.Data.AppDbContext>()
     .AddDefaultTokenProviders();
+
 
 
 var app = builder.Build();
