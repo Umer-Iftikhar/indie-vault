@@ -13,7 +13,6 @@ namespace IndieVault.ViewModels
         [DataType(DataType.MultilineText)]
         public string Description { get; set; } = string.Empty;
 
-        //[Required]
         [DataType(DataType.Upload)]
         public IFormFile CoverImage { get; set; } = null!;
 

@@ -1,5 +1,6 @@
 ﻿namespace IndieVault.DTOs
 {
+    // This DTO is used to transfer data when editing an existing game. It includes the game's current details as well as the necessary data for populating dropdowns and selection lists in the edit form.
     public class GameEditDto
     {
         public int Id { get; set; }
@@ -13,6 +14,7 @@
         public int SelectedEngineId { get; set; } 
         public List<int> SelectedPlatformIds { get; set; } = new List<int>();
         public List<int> SelectedTagIds { get; set; } = new List<int>();
+        // Lookup data for dropdowns and selection lists
         public GameFormDataDto FormData { get; set; } = new GameFormDataDto();
     }
 }
