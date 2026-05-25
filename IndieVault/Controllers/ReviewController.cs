@@ -1,10 +1,9 @@
-﻿using IndieVault.Data;
-using IndieVault.Models;
+﻿using IndieVault.DTOs;
+using IndieVault.Services.Interfaces;
 using IndieVault.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 
 
@@ -12,34 +11,29 @@ namespace IndieVault.Controllers
 {
     public class ReviewController : Controller
     {
-        private readonly AppDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IReviewService _reviewService;
 
-        public ReviewController(AppDbContext context, UserManager<ApplicationUser> userManager)
+        public ReviewController(IReviewService reviewService)
         {
-            _context = context;
-            _userManager = userManager;
+            _reviewService = reviewService;
         }
 
         [HttpGet]
         [Authorize(Roles ="Player")]
         public async Task<IActionResult> Create(int id)
         {
-            bool gameExists = await _context.Games.AnyAsync(game => game.Id == id);
-            if(!gameExists)
-            {
-                return NotFound();
-            }
+            await _reviewService.GetReviewFormAsync(id);
 
-            // _userManager.GetUserId(User) -> This returns the GUID string directly from the claims — no database call needed.
-            bool alreadyReviewed = await _context.Reviews.AnyAsync(r => r.GameId == id && r.UserId == _userManager.GetUserId(User));
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Getting the user ID from claims
+
+            bool alreadyReviewed = await _reviewService.HasUserReviewedAsync(id, currentUserId!); // Check if the user has already reviewed this game
             if (alreadyReviewed)
             {
                 TempData["ErrorMessage"] = "You have already reviewed this game.";
                 return RedirectToAction("Details", "Game", new { id });
             }
 
-            var viewModel = new ReviewViewModel
+            var viewModel = new ReviewViewModel // We only need the GameId to link the review to the correct game
             {
                 GameId = id
             };
@@ -55,60 +49,48 @@ namespace IndieVault.Controllers
             {
                 return View(viewModel);
             }
-            bool alreadyReviewed = await _context.Reviews.AnyAsync(r => r.GameId == viewModel.GameId && r.UserId == _userManager.GetUserId(User));
 
-            if (alreadyReviewed)
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Getting the user ID from claims
+            bool alreadyReviewed = await _reviewService.HasUserReviewedAsync(viewModel.GameId, currentUserId!);
+
+            if (alreadyReviewed) // Double-checking on POST to prevent any bypass of the GET check (e.g., via direct POST request)
             {
                 TempData["ErrorMessage"] = "You have already reviewed this game.";
                 return RedirectToAction("Details", "Game", new { id = viewModel.GameId });
             }
-
-            await _context.Reviews.AddAsync(new Review
+            var createReviewDto = new CreateReviewDto // Mapping the ViewModel to a DTO for service layer
             {
                 GameId = viewModel.GameId,
-                UserId = _userManager.GetUserId(User)!,
                 Rating = viewModel.Rating,
-                Comment = viewModel.Comment,
-                ReviewDate = DateTime.UtcNow
-            });
+                Comment = viewModel.Comment
+            };
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Details", "Game", new { id = viewModel.GameId });
+            await _reviewService.CreateReviewAsync(createReviewDto, currentUserId!); 
+
+            return RedirectToAction("Details", "Game", new { id = viewModel.GameId }); // Redirecting back to the Game Details page after successful review creation
         }
 
         [HttpPost]
         [Authorize] // Ensures only logged-in users can even hit this logic
         [ValidateAntiForgeryToken] 
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, int gameId)
         {
             // Fetch the review
-            var review = await _context.Reviews.FindAsync(id);
-
-            // Return NotFound if it doesn't exist
-            if (review == null)
+            if (!ModelState.IsValid)  // Basic validation check, though we only have the review ID here
             {
-                return NotFound();
+                return BadRequest();
             }
 
             // Authorization Check
-            var currentUserId = _userManager.GetUserId(User);
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             bool isAdmin = User.IsInRole("Admin");
 
-            // Only the owner of the review OR an Admin can proceed
-            if (review.UserId != currentUserId && !isAdmin)
-            {
-                return Forbid();
-            }
-
-            // Capture GameId for the redirect before deleting
-            int gameId = review.GameId;
-
-            // Delete and Save
-            _context.Reviews.Remove(review);
-            await _context.SaveChangesAsync();
+            // Attempt to delete the review
+            await _reviewService.DeleteReviewAsync(id, currentUserId!, isAdmin);
 
             // Let the user know it worked
             TempData["Message"] = "Review removed successfully.";
+
 
             // Redirect back to the Game Details page
             return RedirectToAction("Details", "Game", new { id = gameId });

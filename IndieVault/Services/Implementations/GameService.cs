@@ -300,7 +300,7 @@ namespace IndieVault.Services.Implementations
         }
         public async Task<GameDetailDto> GetGameDetailsAsync(int gameId, string userId)
         {
-            var game = await _context.Games
+            var game = await _context.Games // Include all related data needed for the game details page, including developer info, genre, engine, platforms, tags, screenshots, and reviews with reviewer info
                .Include(g => g.Developer)
                .Include(g => g.Genre)
                .Include(g => g.Engine)
@@ -317,7 +317,7 @@ namespace IndieVault.Services.Implementations
             {
                 throw new ArgumentException("Game not found.");
             }
-            return new GameDetailDto
+            return new GameDetailDto // Map the Game entity to GameDetailDto, including related data and user-specific info
             {
                 GameId = game.Id,
                 Title = game.Title,
@@ -332,18 +332,20 @@ namespace IndieVault.Services.Implementations
                 CoverImagePath = game.CoverImagePath,
                 DownloadLink = game.DownloadLink,
                 Tags = game.GameTags.Select(gt => gt.Tag.Name).ToList(),
-                Screenshots = game.Screenshots.Select(s => new ScreenshotDto
+                Screenshots = game.Screenshots.Select(s => new ScreenshotDto // Map Screenshot entity to ScreenshotDto
                 {
                     ImagePath = s.ImagePath
                 }).ToList(),
-                Reviews = game.Reviews.Select(r => new ReviewDto
+                Reviews = game.Reviews.Select(r => new ReviewDto // Include reviewer name by accessing the User navigation property
                 {
+                    Id = r.Id,
+                    UserId = r.UserId,
                     ReviewerName = r.User.UserName!,
                     Rating = r.Rating,
                     Comment = r.Comment,
                     ReviewDate = r.ReviewDate
                 }).ToList(),
-                HasWishlisted = await _context.Wishlists.AnyAsync(w => w.GameId == gameId && w.UserId == userId),
+                HasWishlisted = await _context.Wishlists.AnyAsync(w => w.GameId == gameId && w.UserId == userId), // Check if the current user has wishlisted this game
                 HasReviewed = await _context.Reviews.AnyAsync(r => r.GameId == gameId && r.UserId == userId)
             };
         }

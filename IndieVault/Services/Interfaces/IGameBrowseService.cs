@@ -7,7 +7,7 @@ namespace IndieVault.Services.Interfaces
     {
         Task<List<LookupDto>> GetGenreListAsync();
         Task<List<LookupDto>> GetPlatformListAsync();
-        public Task<(List<GameBrowseDto> Games, int TotalCount)> GetBrowseGamesAsync(int pageNumber, int pageSize, string? searchTerm, decimal? minPrice, decimal? maxPrice, int? genreId, List<int>? platformIds, SortBy sortBy);
-        public Task<IEnumerable<FeaturedGameDto>> GetFeaturedGamesAsync();
+        Task<(List<GameBrowseDto> Games, int TotalCount)> GetBrowseGamesAsync(int pageNumber, int pageSize, string? searchTerm, decimal? minPrice, decimal? maxPrice, int? genreId, List<int>? platformIds, SortBy sortBy);
+        Task<IEnumerable<FeaturedGameDto>> GetFeaturedGamesAsync();
     }
 }

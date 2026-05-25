@@ -10,8 +10,10 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<GameBrowseService>();
 builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IGameBrowseService, GameBrowseService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+
 builder.Services.AddHttpClient<IGitHubService, GitHubService>(httpClient =>
 {
     httpClient.BaseAddress = new Uri("https://api.github.com/");

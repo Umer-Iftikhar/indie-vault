@@ -2,10 +2,11 @@
 using IndieVault.Enums;
 using MySqlConnector;
 using Dapper;
+using IndieVault.Services.Interfaces;
 
 namespace IndieVault.Services
 {
-    public class GameBrowseService
+    public class GameBrowseService : IGameBrowseService
     {
         private readonly IConfiguration _configuration;
         public GameBrowseService(IConfiguration configuration)
@@ -100,6 +101,22 @@ namespace IndieVault.Services
 
             var result = await connection.QueryAsync<FeaturedGameDto>(sql);
             return result;
+        }
+
+        public async Task<List<LookupDto>> GetGenreListAsync()
+        {
+            using var connection = CreateConnection();
+            var sql = "SELECT Id, Name FROM genres ORDER BY Name;";
+            var result = await connection.QueryAsync<LookupDto>(sql);
+            return result.ToList();
+        }
+
+        public async Task<List<LookupDto>> GetPlatformListAsync()
+        {
+            using var connection = CreateConnection();
+            var sql = "SELECT Id, Name FROM platforms ORDER BY Name;";
+            var result = await connection.QueryAsync<LookupDto>(sql);
+            return result.ToList();
         }
     }
 }
