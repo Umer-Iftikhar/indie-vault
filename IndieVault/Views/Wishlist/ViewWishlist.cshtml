@@ -1,4 +1,4 @@
-﻿@model IEnumerable<IndieVault.Models.Wishlist>
+﻿@model List<IndieVault.DTOs.WishlistItemDto>
 
 @{
     ViewData["Title"] = "My Wishlist";
@@ -21,21 +21,21 @@
             {
                 <div class="wishlist-item" data-row-id="@item.GameId">
                     <div class="item-cover">
-                        <img src="@item.Game.CoverImagePath" alt="@item.Game.Title" />
+                        <img src="@item.CoverImagePath" alt="@item.Title" />
                     </div>
                     
                     <div class="item-details">
                         <h3 class="item-title">
-                            <a asp-controller="Game" asp-action="Details" asp-route-id="@item.GameId">@item.Game.Title</a>
+                            <a asp-controller="Game" asp-action="Details" asp-route-id="@item.GameId">@item.Title</a>
                         </h3>
                         <span class="item-genre">
-                            <i class="bi bi-controller"></i> @item.Game.Genre?.Name
+                            <i class="bi bi-controller"></i> @item.GameGenre
                         </span>
                         <p class="item-date">Added on @item.CreatedDate.ToShortDateString()</p>
                     </div>
                     
                     <div class="item-price">
-                        <span class="price-tag">@(item.Game.Price == 0 ? "Free" : $"${item.Game.Price}")</span>
+                        <span class="price-tag">@(item.Price == 0 ? "Free" : $"${item.Price}")</span>
                     </div>
                     
                     <div class="item-actions">

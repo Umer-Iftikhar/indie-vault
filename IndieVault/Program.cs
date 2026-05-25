@@ -13,6 +13,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrowseService, GameBrowseService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IWishlistService, WishlistService>();
 
 builder.Services.AddHttpClient<IGitHubService, GitHubService>(httpClient =>
 {

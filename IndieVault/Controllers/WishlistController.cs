@@ -1,43 +1,33 @@
-﻿using IndieVault.Data;
-using IndieVault.DTOs;
-using IndieVault.Models;
+﻿using IndieVault.DTOs;
+using IndieVault.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace IndieVault.Controllers
 {
     [Authorize(Roles = "Player")]
     public class WishlistController : Controller
     {
-        private readonly AppDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        
-        public WishlistController(AppDbContext context, UserManager<ApplicationUser> userManager)
+        private readonly IWishlistService _wishlistService;
+
+        public WishlistController(IWishlistService wishlistService)
         {
-            _context = context;
-            _userManager = userManager;
+            _wishlistService = wishlistService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] WishlistRequestDto dto)
         {
-            var userId = _userManager.GetUserId(User)!;
-            var existingEntry = await _context.Wishlists.AnyAsync(w => w.GameId == dto.GameId && w.UserId == userId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var existingEntry = await _wishlistService.HasUserWishlistedAsync(dto.GameId, userId!);
 
             if (existingEntry)
             {
                 return Json(new { success = false, message = "This game is already in your wishlist." });
             }
-            var wishlistEntry = new Wishlist
-            {
-                GameId = dto.GameId,
-                UserId = userId
-            };
-
-            _context.Wishlists.Add(wishlistEntry);
-            await _context.SaveChangesAsync();
+            
+            await _wishlistService.AddToWishlistAsync(dto.GameId, userId!);
 
             return Json(new { success = true, message = "Game added to your wishlist!" });
         }
@@ -45,16 +35,10 @@ namespace IndieVault.Controllers
         [HttpPost]
         public async Task<IActionResult> Remove([FromBody] WishlistRequestDto dto)
         {
-            var userId = _userManager.GetUserId(User)!;
-            var wishlistEntry = await _context.Wishlists.FirstOrDefaultAsync(w => w.GameId == dto.GameId && w.UserId == userId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (wishlistEntry == null)
-            {
-                return Json(new { success = false, message = "This game is not in your wishlist." });
-            }
-
-            _context.Wishlists.Remove(wishlistEntry);
-            await _context.SaveChangesAsync();
+            await _wishlistService.RemoveFromWishlistAsync(dto.GameId, userId!);
+            // The service method will handle the case where the game is not in the wishlist
 
             return Json (new { success = true, message = "Game removed from your wishlist." });
         }
@@ -62,12 +46,9 @@ namespace IndieVault.Controllers
         [HttpGet]
         public async Task<IActionResult> ViewWishlist ()
         {
-            var userId = _userManager.GetUserId(User)!;
-            var wishlistGames = await _context.Wishlists
-                .Where(w => w.UserId == userId)
-                .Include(w => w.Game)
-                    .ThenInclude(g => g.Genre)
-                .ToListAsync();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            
+            var wishlistGames = await _wishlistService.GetUserWishlistAsync(userId!);
 
             return View(wishlistGames);
         }
