@@ -1,9 +1,7 @@
 ﻿using IndieVault.Data;
-using IndieVault.Models;
-using IndieVault.ViewModels;
+using IndieVault.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace IndieVault.Controllers
@@ -12,31 +10,18 @@ namespace IndieVault.Controllers
     [Authorize(Roles = "Player,Admin,GameDev")]
     public class DownloadController : Controller
     {
-        private readonly AppDbContext _context;
-        public DownloadController(AppDbContext context)
+        private readonly IDownloadService _downloadService;
+        public DownloadController(IDownloadService downloadService)
         {
-            _context = context;
+            _downloadService = downloadService;
         }
 
         [HttpPost]
         public async Task<IActionResult> Download(int id)
         {
-            var game = await _context.Games.FirstOrDefaultAsync(g => g.Id == id);
-            if (game == null)
-            {
-                return NotFound();
-            }
-            var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var model = new DownloadHistory
-            {
-                DownloadDate = DateTime.UtcNow,
-                GameId = game.Id,
-                UserId = user
-            };
-
-            _context.DownloadHistories.Add(model);
-            await _context.SaveChangesAsync();
-            return Redirect(game.DownloadLink);
+            var currentUser = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var downloadLink = await _downloadService.DownloadGameAsync(id, currentUser!);
+            return Redirect(downloadLink);
         }
 
         [HttpGet]
@@ -47,15 +32,7 @@ namespace IndieVault.Controllers
             {
                 return Unauthorized(); 
             }
-            var gameList = await _context.DownloadHistories
-                .Include(g => g.Game)
-                .Where(g => g.UserId == currentUserId)
-                .Select(g => new DownloadHistoryViewModel
-                {
-                    GameId = g.Game.Id,
-                    GameName = g.Game.Title,
-                    DownloadTime = g.DownloadDate
-                }).ToListAsync();
+            var gameList = await _downloadService.GetDownloadHistoryAsync(currentUserId);
             return View(gameList);
         }
     }
