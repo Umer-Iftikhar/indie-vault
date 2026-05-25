@@ -2,11 +2,11 @@
 using IndieVault.DTOs;
 using IndieVault.Models;
 using IndieVault.Services;
+using IndieVault.Services.Interfaces;
 using IndieVault.ViewModels;    
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace IndieVault.Controllers
 {
@@ -14,15 +14,15 @@ namespace IndieVault.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly AppDbContext _context;
         private readonly IGitHubService _gitHubService;
+        private readonly IGameService _gameService;
 
-        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,AppDbContext context, IGitHubService gitHubService)
+        public AccountController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IGitHubService gitHubService, IGameService gameService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _context = context;
             _gitHubService = gitHubService;
+            _gameService = gameService;
         }
         [HttpGet]
         public async Task<IActionResult> RegisterPlayer()
@@ -163,7 +163,7 @@ namespace IndieVault.Controllers
                 git = await _gitHubService.GetProfileAsync(user.GithubUserName);
             }
 
-            var totalGames = await _context.Games.CountAsync(g => g.DeveloperId == userId);
+            var totalGames = await _gameService.GetDevGameCountAsync(userId);
 
             var model = new DevProfileViewModel
             {

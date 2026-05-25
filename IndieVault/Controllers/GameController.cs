@@ -1,4 +1,6 @@
-﻿using IndieVault.Services.Interfaces;
+﻿using IndieVault.DTOs;
+using IndieVault.Models;
+using IndieVault.Services.Interfaces;
 using IndieVault.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -54,7 +56,22 @@ namespace IndieVault.Controllers
 
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-            await _gameService.UploadGameAsync(model, currentUserId);
+            var uploadDto = new GameUploadDto
+            {
+                Title = model.Title,
+                Description = model.Description,
+                CoverImage = model.CoverImage,
+                Price = model.Price,
+                Screenshots = model.Screenshots,
+                SelectedGenreId = model.SelectedGenreId,
+                SelectedEngineId = model.SelectedEngineId,
+                DownloadLink = model.DownloadLink,
+                ReleaseDate = model.ReleaseDate,
+                SelectedPlatforms = model.SelectedPlatforms,
+                SelectedTags = model.SelectedTags
+            };
+
+            await _gameService.UploadGameAsync(uploadDto, currentUserId);
 
             return RedirectToAction(nameof(MyGames));
         }
@@ -122,7 +139,23 @@ namespace IndieVault.Controllers
             }
 
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            await _gameService.UpdateGameAsync(model, currentUserId!);
+
+            var updateDto = new GameUpdateDto
+            {
+                Id = model.Id,
+                Title = model.Title,
+                Description = model.Description,
+                CoverImage = model.CoverImage,
+                Price = model.Price,
+                Screenshots = model.Screenshots,
+                SelectedGenreId = model.SelectedGenreId,
+                SelectedEngineId = model.SelectedEngineId,
+                DownloadLink = model.DownloadLink,
+                ReleaseDate = model.ReleaseDate,
+                SelectedPlatforms = model.SelectedPlatforms,
+                SelectedTags = model.SelectedTags
+            };
+            await _gameService.UpdateGameAsync(updateDto, currentUserId!);
 
             return RedirectToAction(nameof(MyGames));
         }
