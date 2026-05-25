@@ -10,8 +10,8 @@ namespace IndieVault.ViewModels
         public List<UserByRoleDto> UsersByRole { get; set; } = new();
         public int TotalGames { get; set; }
         public int TotalReviews { get; set; }
-        public List<Genre> Genres { get; set; } = new();
-        public List<Game> Games { get; set; } = new();
+        public List<LookupDto> Genres { get; set; } = new();
+        public List<AdminGameDto> Games { get; set; } = new();
 
     }
 }

@@ -1,7 +1,6 @@
 using IndieVault.Data;
 using IndieVault.Extensions;
 using IndieVault.Models;
-using IndieVault.Services;
 using IndieVault.Services.Implementations;
 using IndieVault.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +14,7 @@ builder.Services.AddScoped<IGameBrowseService, GameBrowseService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IWishlistService, WishlistService>();
 builder.Services.AddScoped<IDownloadService, DownloadService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 builder.Services.AddHttpClient<IGitHubService, GitHubService>(httpClient =>
 {

@@ -4,7 +4,7 @@ using MySqlConnector;
 using Dapper;
 using IndieVault.Services.Interfaces;
 
-namespace IndieVault.Services
+namespace IndieVault.Services.Implementations
 {
     public class GameBrowseService : IGameBrowseService
     {

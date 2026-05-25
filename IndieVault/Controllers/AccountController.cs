@@ -1,9 +1,8 @@
 ﻿using IndieVault.Data;
 using IndieVault.DTOs;
 using IndieVault.Models;
-using IndieVault.Services;
 using IndieVault.Services.Interfaces;
-using IndieVault.ViewModels;    
+using IndieVault.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

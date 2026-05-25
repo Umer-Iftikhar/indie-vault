@@ -1,7 +1,8 @@
 ﻿using System.Net.Http.Json;
 using IndieVault.DTOs;
+using IndieVault.Services.Interfaces;
 
-namespace IndieVault.Services
+namespace IndieVault.Services.Implementations
 {
     public class GitHubService : IGitHubService
     {

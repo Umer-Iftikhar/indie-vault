@@ -9,6 +9,6 @@ namespace IndieVault.Services.Interfaces
         Task<bool> GenreExistsAsync(string genreName);
         Task AdminDeleteGenreAsync(int genreId);
         Task IsGameFeatureAsync(int gameId);
-
+        Task<LookupDto> GetGenreByIdAsync(int genreId);
     }
 }
