@@ -2,9 +2,8 @@
 
 namespace IndieVault.Models
 {
-    public class Engine
+    public class Engine : BaseEntity
     {
-        public int Id { get; set; }
         [Required, StringLength(50)]
         public string Name { get; set; } = string.Empty;
 

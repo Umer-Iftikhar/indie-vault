@@ -1,6 +1,8 @@
 using IndieVault.Data;
 using IndieVault.Extensions;
 using IndieVault.Models;
+using IndieVault.Repositories.Implementations;
+using IndieVault.Repositories.Interfaces;
 using IndieVault.Services.Implementations;
 using IndieVault.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+
+// Register services
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrowseService, GameBrowseService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
@@ -21,6 +25,13 @@ builder.Services.AddHttpClient<IGitHubService, GitHubService>(httpClient =>
     httpClient.BaseAddress = new Uri("https://api.github.com/");
     httpClient.DefaultRequestHeaders.Add("User-Agent", "IndieVault");
 });
+
+// Register repositories
+builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<IGameRepository, GameRepository>();
+builder.Services.AddScoped<IPlatformRepository, PlatformRepository>();
+builder.Services.AddScoped<IEngineRepository, EngineRepository>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");

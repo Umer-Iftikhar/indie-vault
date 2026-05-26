@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IndieVault.Models
 {
-    public class DownloadHistory
+    public class DownloadHistory : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
         public DateTime DownloadDate { get; set; } = DateTime.UtcNow;
         [ForeignKey(nameof(Game))]
         public int GameId { get; set; }

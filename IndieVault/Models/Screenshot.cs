@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IndieVault.Models
 {
-    public class Screenshot
+    public class Screenshot : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
         [Required]
         [StringLength(500)]
         public string ImagePath { get; set; } = String.Empty;

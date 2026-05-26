@@ -2,10 +2,8 @@
 
 namespace IndieVault.Models
 {
-    public class Tag
+    public class Tag :BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
         [Required]
         [StringLength(50)]
         public string Name { get; set; } = string.Empty;

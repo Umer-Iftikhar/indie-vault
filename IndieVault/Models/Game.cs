@@ -3,11 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IndieVault.Models
 {
-    public class Game
+    public class Game : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
-
         [Required]
         [StringLength(100)]
         public string Title { get; set; } = string.Empty;

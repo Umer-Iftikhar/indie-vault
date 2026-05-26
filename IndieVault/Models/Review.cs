@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IndieVault.Models
 {
-    public class Review
+    public class Review : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
         [Required]
         [Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")]
         public int Rating { get; set; } = 0;

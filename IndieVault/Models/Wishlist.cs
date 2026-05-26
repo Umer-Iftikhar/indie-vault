@@ -1,12 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IndieVault.Models
 {
-    public class Wishlist
+    public class Wishlist : BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         [ForeignKey(nameof(Game))]
         public int GameId { get; set; }
