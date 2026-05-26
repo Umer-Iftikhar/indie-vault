@@ -1,52 +1,66 @@
-﻿using IndieVault.Data;
-using IndieVault.DTOs;
+﻿using IndieVault.DTOs;
 using IndieVault.Models;
+using IndieVault.Repositories.Interfaces;
 using IndieVault.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography.X509Certificates;
 
 namespace IndieVault.Services.Implementations
 {
     public class GameService : IGameService
     {
-        private readonly ILogger<GameService> _logger;
-        private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _environment; // For handling file uploads and accessing web root path
         private readonly UserManager<ApplicationUser> _userManager; // For accessing user information and managing user-related operations
+        private readonly IEngineRepository _engineRepository;
+        private readonly IGenreRepository _genreRepository;
+        private readonly IPlatformRepository _platformRepository;
+        private readonly ITagRepository _tagRepository;
+        private readonly IGameRepository _gameRepository;
+        private readonly IScreenshotRepository _screenshotRepository; // Repository for managing screenshots
+        private readonly IWishlistRepository _wishlistRepository; // Repository for managing wishlists
+        private readonly IReviewRepository _reviewRepository; // Repository for managing reviews
 
-        public GameService(ILogger<GameService> logger, AppDbContext context, IWebHostEnvironment environment, UserManager<ApplicationUser> userManager)
+        public GameService
+            (
+            IWebHostEnvironment environment, 
+            UserManager<ApplicationUser> userManager, 
+            IEngineRepository engineRepository, 
+            IGenreRepository genreRepository, 
+            IPlatformRepository platformRepository, 
+            ITagRepository tagRepository, 
+            IGameRepository gameRepository, 
+            IScreenshotRepository screenshotRepository,
+            IWishlistRepository wishlistRepository,
+            IReviewRepository reviewRepository
+            )
         {
-            _logger = logger;
-            _context = context;
             _environment = environment;
             _userManager = userManager;
+            _engineRepository = engineRepository;
+            _genreRepository = genreRepository;
+            _platformRepository = platformRepository;
+            _tagRepository = tagRepository;
+            _gameRepository = gameRepository;
+            _screenshotRepository = screenshotRepository;
+            _wishlistRepository = wishlistRepository;
+            _reviewRepository = reviewRepository;
         }
 
         // This method retrieves the necessary data for populating the game upload/edit form, such as genres, engines, platforms, and tags.
         public async Task<GameFormDataDto> GetFormDataAsync()
         {
-            var genres = await _context.Genres.Select(g => new LookupDto
-            {
-                Id = g.Id,
-                Name = g.Name
-            }).ToListAsync();
-            var engines = await _context.Engines.Select(e => new LookupDto
-            {
-                Id = e.Id,
-                Name = e.Name
-            }).ToListAsync();
-            var platforms = await _context.Platforms.Select(p => new LookupDto
-            {
-                Id = p.Id,
-                Name = p.Name
-            }).ToListAsync();
-            var tags = await _context.Tags.Select(t => new LookupDto
-            {
-                Id = t.Id,
-                Name = t.Name
-            }).ToListAsync();
+            // Retrieve all genres, engines, platforms, and tags from the database using the respective repositories  
+            var genreEntities = await _genreRepository.GetAllAsync();
+            var engineEntities = await _engineRepository.GetAllAsync();
+            var platformEntities = await _platformRepository.GetAllAsync();
+            var tagEntities = await _tagRepository.GetAllAsync();
 
+            // Map the retrieved entities to LookupDto objects, which contain only the Id and Name properties needed for dropdowns in the form
+            var genres = genreEntities.Select(g => new LookupDto { Id = g.Id, Name = g.Name }).ToList();
+            var engines = engineEntities.Select(e => new LookupDto { Id = e.Id, Name = e.Name }).ToList();
+            var platforms = platformEntities.Select(p => new LookupDto { Id = p.Id, Name = p.Name }).ToList();
+            var tags = tagEntities.Select(t => new LookupDto { Id = t.Id, Name = t.Name }).ToList();
+
+            // Return a GameFormDataDto containing the lists of genres, engines, platforms, and tags to be used in the game upload/edit form
             return new GameFormDataDto
             {
                 Genres = genres,
@@ -57,6 +71,7 @@ namespace IndieVault.Services.Implementations
         }
         public async Task UploadGameAsync(GameUploadDto uploadDto, string userId)
         {
+            // 1. Create a new Game entity and populate its properties with the data from the GameUploadDto
             var game = new Game
             {
                 Title = uploadDto.Title,
@@ -72,8 +87,7 @@ namespace IndieVault.Services.Implementations
                 GamePlatforms = uploadDto.SelectedPlatforms?.Select(p => new GamePlatform { PlatformId = Convert.ToInt32(p) }).ToList() ?? new List<GamePlatform>(),
                 GameTags = uploadDto.SelectedTags?.Select(t => new GameTag { TagId = Convert.ToInt32(t) }).ToList() ?? new List<GameTag>()
             };
-            await _context.Games.AddAsync(game);
-            await _context.SaveChangesAsync();
+            await _gameRepository.CreateAsync(game); // Save the game to the database to generate an ID for file storage
 
             // Handle file uploads (cover image)
 
@@ -121,34 +135,33 @@ namespace IndieVault.Services.Implementations
                         GameId = game.Id
                     });
                 }
-                await _context.Screenshots.AddRangeAsync(screenshotList);
+                await _screenshotRepository.AddScreenshotsAsync(screenshotList);
             }
             // 6. Save changes again to update CoverPath and add Screenshots
-            await _context.SaveChangesAsync();
+            await _gameRepository.UpdateAsync(game);
 
-            return;
         }
         public async Task<List<MyGameDto>> GetMyGamesAsync(string userId)
         {
+            // Retrieve all games developed by the current user using the game repository
+            var games = await _gameRepository.GetGamesByDevIdAsync(userId);
 
-            var games = await _context.Games
-                .Where(g => g.DeveloperId == userId) // Filter games by the current user's ID to ensure users only see their own games
-                .Select(g => new MyGameDto
-                {
-                    Id = g.Id,
-                    Title = g.Title,
-                    Price = g.Price,
+            // Map the retrieved Game entities to MyGameDto objects, which contain only the necessary properties for displaying in the "My Games" section
+            return games.Select(g => new MyGameDto
+            {
+                Id = g.Id,
+                Title = g.Title,
+                Price = g.Price,
                     ReleaseDate = g.ReleaseDate,
                     CoverImagePath = g.CoverImagePath,
                     GenreName = g.Genre.Name,
                     Engine = g.Engine.Name
-                })
-                .ToListAsync();
-            return games;
+                }).ToList();
         }
         public async Task DeleteGameAsync(int gameId, string userId)
         {
-            var game = await _context.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.DeveloperId == userId);
+            // Retrieve the game from the database and ensure that it belongs to the current user before allowing deletion
+            var game = await _gameRepository.GetGameIfOwnerAsync(gameId, userId);
             if (game == null)
             {
                 throw new InvalidOperationException("Game not found or access denied.");
@@ -160,17 +173,14 @@ namespace IndieVault.Services.Implementations
                 Directory.Delete(gameFolder, true);
             }
 
-            _context.Games.Remove(game);
-            await _context.SaveChangesAsync();
+            await _gameRepository.DeleteAsync(gameId); // Delete the game from the database
         }
         public async Task<GameEditDto> GetGameForEditAsync(int gameId, string userId)
         {
-            var game = await _context.Games
-                .Include(g => g.GamePlatforms)
-                    .ThenInclude(gp => gp.Platform)
-                .Include(g => g.GameTags)
-                    .ThenInclude(gt => gt.Tag)
-                .FirstOrDefaultAsync(g => g.Id == gameId);
+            // Retrieve the game along with its related platforms and tags 
+            var game = await _gameRepository.GetGameWithPlatformsAndTagsAsync(gameId);
+
+            // Ensure the game exists and belongs to the current user before allowing access to edit
             if (game == null)
             {
                 throw new InvalidOperationException("Game not found.");
@@ -179,6 +189,8 @@ namespace IndieVault.Services.Implementations
             {
                 throw new UnauthorizedAccessException("You do not have permission to edit this game.");
             }
+
+            // Map the Game entity to a GameEditDto
             return new GameEditDto
             {
                 Id = game.Id,
@@ -197,10 +209,7 @@ namespace IndieVault.Services.Implementations
         public async Task UpdateGameAsync(GameUpdateDto updateDto, string userId)
         {
             // Retrieve the game from the database.
-            var game = await _context.Games
-                .Include(g => g.GamePlatforms)
-                .Include(g => g.GameTags)
-                .FirstOrDefaultAsync(g => g.Id == updateDto.Id);
+            var game = await _gameRepository.GetGameWithPlatformsAndTagsAsync(updateDto.Id);
 
             if (game == null)
             {
@@ -260,8 +269,7 @@ namespace IndieVault.Services.Implementations
                 var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", game.Id.ToString());
 
                 // 1. Remove old screenshot records from DB
-                var oldScreenshots = await _context.Screenshots.Where(s => s.GameId == game.Id).ToListAsync();
-                _context.Screenshots.RemoveRange(oldScreenshots);
+                await _screenshotRepository.DeleteScreenshotsByGameIdAsync(game.Id);
 
                 // 2. Physical Cleanup: Delete old files that aren't the cover
                 if (Directory.Exists(gameFolder))
@@ -277,41 +285,38 @@ namespace IndieVault.Services.Implementations
                     Directory.CreateDirectory(gameFolder);
                 }
 
+                var screenshotList = new List<Screenshot>();
+
                 // 3. Save new files and add to DB
                 foreach (var file in updateDto.Screenshots)
                 {
+                    // Generate a unique file name for each screenshot to avoid conflicts
                     var extension = Path.GetExtension(file.FileName);
                     var fileName = $"screenshot_{Guid.NewGuid()}{extension}";
                     var filePath = Path.Combine(gameFolder, fileName);
 
+                    // Save the new screenshot to the server
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
                     }
 
-                    _context.Screenshots.Add(new Screenshot
+                    // Add new screenshot record to the database
+                    screenshotList.Add(new Screenshot
                     {
                         GameId = game.Id,
                         ImagePath = $"/images/games/{game.Id}/{fileName}"
-                    });
+                    });;
                 }
+                // Add the new screenshot to the database using the repository
+                await _screenshotRepository.AddScreenshotsAsync(screenshotList);
             }
-            await _context.SaveChangesAsync();
+            await _gameRepository.UpdateAsync(game);
         }
         public async Task<GameDetailDto> GetGameDetailsAsync(int gameId, string userId)
         {
-            var game = await _context.Games // Include all related data needed for the game details page, including developer info, genre, engine, platforms, tags, screenshots, and reviews with reviewer info
-               .Include(g => g.Developer)
-               .Include(g => g.Genre)
-               .Include(g => g.Engine)
-               .Include(g => g.GamePlatforms)
-                   .ThenInclude(gp => gp.Platform)
-               .Include(g => g.GameTags)
-                   .ThenInclude(gt => gt.Tag)
-               .Include(g => g.Screenshots)
-               .Include(g => g.Reviews)
-                   .ThenInclude(r => r.User)
-               .FirstOrDefaultAsync(g => g.Id == gameId);
+            // Retrieve the game along with all its related data using the game repository
+            var game = await _gameRepository.GetGameWithDetailsAsync(gameId);
 
             if (game == null)
             {
@@ -345,14 +350,16 @@ namespace IndieVault.Services.Implementations
                     Comment = r.Comment,
                     ReviewDate = r.ReviewDate
                 }).ToList(),
-                HasWishlisted = await _context.Wishlists.AnyAsync(w => w.GameId == gameId && w.UserId == userId), // Check if the current user has wishlisted this game
-                HasReviewed = await _context.Reviews.AnyAsync(r => r.GameId == gameId && r.UserId == userId)
+
+                // Check if the current user has wishlisted or reviewed the game using the respective repositories
+                HasWishlisted = await _wishlistRepository.WishlistExistsAsync(userId, gameId),
+                HasReviewed = await _reviewRepository.ReviewExistsAsync(userId, gameId)
             };
         }
 
         public async Task<int> GetDevGameCountAsync(string userId)
         {
-            return await _context.Games.CountAsync(g => g.DeveloperId == userId);
+            return await _gameRepository.GetGameCountByDevIdAsync(userId);
         }
     }
 }

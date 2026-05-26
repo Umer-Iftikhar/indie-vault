@@ -9,5 +9,6 @@ namespace IndieVault.Repositories.Implementations
         public GenreRepository(AppDbContext context) : base(context)
         {
         }
+       
     }
 }
