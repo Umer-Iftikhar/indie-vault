@@ -14,5 +14,21 @@ namespace IndieVault.Repositories.Implementations
         {
             return await _context.Wishlists.AnyAsync(w => w.UserId == userId && w.GameId == gameId);
         }
+        public async Task<List<Wishlist>> GetWishlistByUserIdAsync(string userId)
+        {
+            var wishlistGames = await _context.Wishlists
+                .Where(w => w.UserId == userId)
+                .Include(w => w.Game)
+                    .ThenInclude(g => g.Genre)
+                .ToListAsync();
+            return wishlistGames;
+        }
+        public async Task<Wishlist?> GetWishlistEntryAsync(string userId, int gameId)
+        {
+            return await _context.Wishlists
+                .FirstOrDefaultAsync(w =>
+                    w.UserId == userId &&
+                    w.GameId == gameId);
+        }
     }
 }

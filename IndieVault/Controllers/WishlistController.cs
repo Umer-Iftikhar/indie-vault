@@ -20,13 +20,7 @@ namespace IndieVault.Controllers
         public async Task<IActionResult> Add([FromBody] WishlistRequestDto dto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var existingEntry = await _wishlistService.HasUserWishlistedAsync(dto.GameId, userId!);
 
-            if (existingEntry)
-            {
-                return Json(new { success = false, message = "This game is already in your wishlist." });
-            }
-            
             await _wishlistService.AddToWishlistAsync(dto.GameId, userId!);
 
             return Json(new { success = true, message = "Game added to your wishlist!" });
@@ -37,8 +31,8 @@ namespace IndieVault.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+            // Check if the game is in the user's wishlist before attempting to remove it
             await _wishlistService.RemoveFromWishlistAsync(dto.GameId, userId!);
-            // The service method will handle the case where the game is not in the wishlist
 
             return Json (new { success = true, message = "Game removed from your wishlist." });
         }
