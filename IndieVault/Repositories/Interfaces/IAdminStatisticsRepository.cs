@@ -1,6 +1,4 @@
-﻿using IndieVault.Models;
-using IndieVault.Repositories.Interfaces;
-using IndieVault.DTOs;
+﻿using IndieVault.DTOs;
 
 namespace IndieVault.Repositories.Interfaces
 {
