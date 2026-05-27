@@ -14,5 +14,9 @@ namespace IndieVault.Repositories.Implementations
         {
             return await _context.Reviews.AnyAsync(r => r.UserId == userId && r.GameId == gameId);
         }
+        public async Task<int> CountReviewsAsync()
+        {
+            return await _context.Reviews.CountAsync();
+        }
     }
 }

@@ -20,18 +20,10 @@ namespace IndieVault.Services.Implementations
         private readonly IReviewRepository _reviewRepository; // Repository for managing reviews
 
         public GameService
-            (
-            IWebHostEnvironment environment, 
-            UserManager<ApplicationUser> userManager, 
-            IEngineRepository engineRepository, 
-            IGenreRepository genreRepository, 
-            IPlatformRepository platformRepository, 
-            ITagRepository tagRepository, 
-            IGameRepository gameRepository, 
-            IScreenshotRepository screenshotRepository,
-            IWishlistRepository wishlistRepository,
-            IReviewRepository reviewRepository
-            )
+            (IWebHostEnvironment environment, UserManager<ApplicationUser> userManager, IEngineRepository engineRepository, 
+            IGenreRepository genreRepository, IPlatformRepository platformRepository, ITagRepository tagRepository, 
+            IGameRepository gameRepository, IScreenshotRepository screenshotRepository,IWishlistRepository wishlistRepository,
+            IReviewRepository reviewRepository)
         {
             _environment = environment;
             _userManager = userManager;

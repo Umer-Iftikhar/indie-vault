@@ -9,5 +9,7 @@ namespace IndieVault.Repositories.Interfaces
         Task<Game?> GetGameWithPlatformsAndTagsAsync(int gameId);
         Task<Game?> GetGameWithDetailsAsync(int gameId);
         Task<int> GetGameCountByDevIdAsync(string devId);
+        Task<bool> GameExistsByGenreIdAsync(int genreId);
+        Task<int> CountGamesAsync();
     }
 }

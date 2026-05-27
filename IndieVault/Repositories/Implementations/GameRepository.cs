@@ -39,7 +39,7 @@ namespace IndieVault.Repositories.Implementations
         }
         public async Task<Game?> GetGameWithDetailsAsync(int gameId)
         {
-            var game = await _context.Games 
+            var game = await _context.Games
                .Include(g => g.Developer)
                .Include(g => g.Genre)
                .Include(g => g.Engine)
@@ -53,9 +53,17 @@ namespace IndieVault.Repositories.Implementations
                .FirstOrDefaultAsync(g => g.Id == gameId);
             return game;
         }
-        public async Task<int>GetGameCountByDevIdAsync(string devId)
+        public async Task<int> GetGameCountByDevIdAsync(string devId)
         {
             return await _context.Games.CountAsync(g => g.DeveloperId == devId);
+        }
+        public async Task<int> CountGamesAsync()
+        {
+            return await _context.Games.CountAsync();
+        }
+        public async Task<bool> GameExistsByGenreIdAsync(int genreId)
+        {
+            return await _context.Games.AnyAsync(g => g.GenreId == genreId);
         }
     }
 }

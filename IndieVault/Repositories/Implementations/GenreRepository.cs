@@ -1,6 +1,7 @@
 ﻿using IndieVault.Data;
 using IndieVault.Models;
 using IndieVault.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace IndieVault.Repositories.Implementations
 {
@@ -9,6 +10,9 @@ namespace IndieVault.Repositories.Implementations
         public GenreRepository(AppDbContext context) : base(context)
         {
         }
-       
+        public async Task<bool> GenreExistsByNameAsync(string name)
+        {
+            return await _context.Genres.AnyAsync(g => g.Name.ToLower() == name.ToLower());
+        }
     }
 }
