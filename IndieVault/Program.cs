@@ -36,6 +36,8 @@ builder.Services.AddScoped<IScreenshotRepository, ScreenshotRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
 builder.Services.AddScoped<IAdminStatisticsRepository, AdminStatisticsRepository>();
+builder.Services.AddScoped<IGameBrowseRepository, GameBrowseRepository>();
+builder.Services.AddScoped<IDownloadRepository, DownloadRepository>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
