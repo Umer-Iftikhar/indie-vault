@@ -1,5 +1,4 @@
-﻿using Bogus.DataSets;
-using IndieVault.DTOs;
+﻿using IndieVault.DTOs;
 using IndieVault.Models;
 using IndieVault.Repositories.Interfaces;
 using IndieVault.Services.Interfaces;

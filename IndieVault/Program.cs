@@ -55,8 +55,6 @@ var serverVersion = new MySqlServerVersion(new Version(8, 0, 31));
 builder.Services.AddDbContext<IndieVault.Data.AppDbContext>
 (
     options => options.UseMySql(connectionString, serverVersion)
-        .LogTo(Console.WriteLine, LogLevel.Information)
-        .EnableSensitiveDataLogging()
 );
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -82,11 +80,21 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 var app = builder.Build();
 
-app.UseGlobalExceptionMiddleware();
-
-app.UseStatusCodePagesWithRedirects("/Error/{0}");
 
 // Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage(); // Show detailed error pages in development
+}
+else
+{
+    app.UseGlobalExceptionMiddleware(); // Custom global exception handling middleware
+    app.UseHsts(); // Use HTTP Strict Transport Security in production
+}
+
+
+app.UseStatusCodePagesWithRedirects("/Error/{0}"); // Handle 404 and other status codes by redirecting to a custom error page
+
 if (app.Environment.IsDevelopment())
 {
     await DatabaseSeeder.SeedAsync(app.Services);
@@ -96,11 +104,13 @@ app.UseRouting();
 
 app.UseAuthentication();
 
+app.UseRequestLoggingMiddleware();
+
 app.UseAuthorization();
 
-app.MapStaticAssets();
+app.MapStaticAssets(); 
 
-app.MapControllerRoute(
+app.MapControllerRoute( 
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
