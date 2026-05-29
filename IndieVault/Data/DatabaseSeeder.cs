@@ -2,8 +2,6 @@
 using IndieVault.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Net.NetworkInformation;
-using static System.Net.WebRequestMethods;
 
 namespace IndieVault.Data
 {
@@ -35,43 +33,77 @@ namespace IndieVault.Data
 
         public static async Task<List<Genre>> SeedGenres(AppDbContext context)
         {
-            if (await context.Genres.AnyAsync())
+            var existingGenres = await context.Genres.ToListAsync();
+
+            // If nothing exists at all → seed everything including Uncategorized
+            if (existingGenres.Count == 0)
             {
-                return await context.Genres.ToListAsync();
+                var genres = new List<Genre>
+        {
+            new Genre { Name = "Action" },
+            new Genre { Name = "Adventure" },
+            new Genre { Name = "RPG" },
+            new Genre { Name = "Strategy" },
+            new Genre { Name = "Simulation" },
+            new Genre { Name = "Puzzle" },
+            new Genre { Name = "Horror" },
+            new Genre { Name = "Sports" },
+            new Genre { Name = "Racing" },
+            new Genre { Name = "Uncategorized" }
+        };
+
+                await context.Genres.AddRangeAsync(genres);
+                await context.SaveChangesAsync();
+
+                return genres;
             }
-            var genres = new List<Genre>
+
+            // If data exists → only ensure "Uncategorized"
+            if (!existingGenres.Any(g => g.Name == "Uncategorized"))
             {
-                new Genre { Name = "Action" },
-                new Genre { Name = "Adventure" },
-                new Genre { Name = "RPG" },
-                new Genre { Name = "Strategy" },
-                new Genre { Name = "Simulation" },
-                new Genre { Name = "Puzzle" },
-                new Genre { Name = "Horror" },
-                new Genre { Name = "Sports" },
-                new Genre { Name = "Racing" }
-            };
-            await context.Genres.AddRangeAsync(genres);
-            await context.SaveChangesAsync();
-            return genres;
+                var uncategorized = new Genre { Name = "Uncategorized" };
+                await context.Genres.AddAsync(uncategorized);
+                await context.SaveChangesAsync();
+
+                existingGenres.Add(uncategorized);
+            }
+
+            return existingGenres;
         }
         public static async Task<List<Engine>> SeedEngines(AppDbContext context)
-        { 
-            if (await context.Engines.AnyAsync())
+        {
+            var existingEngines = await context.Engines.ToListAsync();
+
+            // If nothing exists → seed everything including Unknown
+            if (existingEngines.Count == 0)
             {
-                return await context.Engines.ToListAsync();
+                var engines = new List<Engine>
+        {
+            new Engine { Name = "Unity" },
+            new Engine { Name = "Unreal Engine" },
+            new Engine { Name = "Godot" },
+            new Engine { Name = "CryEngine" },
+            new Engine { Name = "RPG Maker" },
+            new Engine { Name = "Unknown" }
+        };
+
+                await context.Engines.AddRangeAsync(engines);
+                await context.SaveChangesAsync();
+
+                return engines;
             }
-            var engines = new List<Engine>
+
+            // If data exists → only ensure "Unknown"
+            if (!existingEngines.Any(e => e.Name == "Unknown"))
             {
-                new Engine { Name = "Unity" },
-                new Engine { Name = "Unreal Engine" },
-                new Engine { Name = "Godot" },
-                new Engine { Name = "CryEngine" },
-                new Engine { Name = "RPG Maker" }
-            };
-            await context.Engines.AddRangeAsync(engines);
-            await context.SaveChangesAsync();
-            return engines;
+                var unknown = new Engine { Name = "Unknown" };
+                await context.Engines.AddAsync(unknown);
+                await context.SaveChangesAsync();
+
+                existingEngines.Add(unknown);
+            }
+
+            return existingEngines;
         }
         public static async Task<List<Platform>> SeedPlatforms(AppDbContext context)
         { 

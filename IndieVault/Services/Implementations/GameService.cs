@@ -18,12 +18,13 @@ namespace IndieVault.Services.Implementations
         private readonly IScreenshotRepository _screenshotRepository; // Repository for managing screenshots
         private readonly IWishlistRepository _wishlistRepository; // Repository for managing wishlists
         private readonly IReviewRepository _reviewRepository; // Repository for managing reviews
+        private readonly ILogger<GameService> _logger;
 
         public GameService
-            (IWebHostEnvironment environment, UserManager<ApplicationUser> userManager, IEngineRepository engineRepository, 
-            IGenreRepository genreRepository, IPlatformRepository platformRepository, ITagRepository tagRepository, 
-            IGameRepository gameRepository, IScreenshotRepository screenshotRepository,IWishlistRepository wishlistRepository,
-            IReviewRepository reviewRepository)
+            (IWebHostEnvironment environment, UserManager<ApplicationUser> userManager, IEngineRepository engineRepository,
+            IGenreRepository genreRepository, IPlatformRepository platformRepository, ITagRepository tagRepository,
+            IGameRepository gameRepository, IScreenshotRepository screenshotRepository, IWishlistRepository wishlistRepository,
+            IReviewRepository reviewRepository, ILogger<GameService> logger  )
         {
             _environment = environment;
             _userManager = userManager;
@@ -35,6 +36,7 @@ namespace IndieVault.Services.Implementations
             _screenshotRepository = screenshotRepository;
             _wishlistRepository = wishlistRepository;
             _reviewRepository = reviewRepository;
+            _logger = logger;
         }
 
         // This method retrieves the necessary data for populating the game upload/edit form, such as genres, engines, platforms, and tags.
@@ -144,11 +146,11 @@ namespace IndieVault.Services.Implementations
                 Id = g.Id,
                 Title = g.Title,
                 Price = g.Price,
-                    ReleaseDate = g.ReleaseDate,
-                    CoverImagePath = g.CoverImagePath,
-                    GenreName = g.Genre.Name,
-                    Engine = g.Engine.Name
-                }).ToList();
+                ReleaseDate = g.ReleaseDate,
+                CoverImagePath = g.CoverImagePath,
+                GenreName = g.Genre.Name,
+                Engine = g.Engine.Name
+            }).ToList();
         }
         public async Task DeleteGameAsync(int gameId, string userId)
         {
@@ -298,7 +300,7 @@ namespace IndieVault.Services.Implementations
                     {
                         GameId = game.Id,
                         ImagePath = $"/images/games/{game.Id}/{fileName}"
-                    });;
+                    }); ;
                 }
                 // Add the new screenshot to the database using the repository
                 await _screenshotRepository.AddScreenshotsAsync(screenshotList);
@@ -352,6 +354,42 @@ namespace IndieVault.Services.Implementations
         public async Task<int> GetDevGameCountAsync(string userId)
         {
             return await _gameRepository.GetGameCountByDevIdAsync(userId);
+        }
+
+        // /<summary>
+        /// Creates a new game in the database using data from an external API (e.g., RAWG) represented by the RawgGameUploadDto.
+        /// This method is used to import games from an external source and save them in the local database.
+        /// /<summary>
+        public async Task<bool> CreateGameFromApiAsync(RawgGameUploadDto dto)
+        {
+            try
+            {
+                // Create a new Game entity and populate its properties with data from the RawgGameUploadDto
+                var game = new Game
+                {
+                    Title = dto.Title,
+                    Description = dto.Description,
+                    Price = dto.Price,
+                    ReleaseDate = dto.ReleaseDate ?? DateTime.UtcNow,
+                    GenreId = dto.GenreId,
+                    EngineId = dto.EngineId,
+                    DeveloperId = dto.DeveloperId,
+                    CreatedDate = DateTime.UtcNow,
+                    CoverImagePath = dto.CoverImagePath,
+                    DownloadLink = dto.DownloadLink,
+                    ExternalApiId = dto.ExternalApiId,
+                    ExternalApiSource = dto.ExternalApiSource,
+                    IsFromExternalApi = dto.IsFromExternalApi
+                };
+                await _gameRepository.CreateAsync(game); // Save the new game to the database
+                return true; // Indicate that the game was successfully created
+            }
+            catch (Exception ex)
+            {
+                // Log the exception 
+                _logger.LogError(ex, "Error creating game from API: {Title}", dto.Title);
+                return false; // Indicate that there was an error creating the game
+            }
         }
     }
 }

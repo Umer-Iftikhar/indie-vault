@@ -65,5 +65,9 @@ namespace IndieVault.Repositories.Implementations
         {
             return await _context.Games.AnyAsync(g => g.GenreId == genreId);
         }
+        public async Task<bool> GameExistsByTitleOrExternalIdAsync(string title, int externalId)
+        {
+            return await _context.Games.AnyAsync(g => g.Title == title || g.ExternalApiId == externalId);
+        }
     }
 }

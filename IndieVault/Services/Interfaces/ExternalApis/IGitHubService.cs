@@ -1,6 +1,6 @@
 ﻿using IndieVault.DTOs;
 
-namespace IndieVault.Services.Interfaces
+namespace IndieVault.Services.Interfaces.ExternalApis
 {
     public interface IGitHubService
     {

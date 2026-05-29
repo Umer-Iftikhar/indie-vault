@@ -14,5 +14,10 @@ namespace IndieVault.Repositories.Implementations
         {
             return await _context.Genres.AnyAsync(g => g.Name.ToLower() == name.ToLower());
         }
+        
+        public async Task<Genre?> GetGenreByNameAsync(string name)
+        {
+            return await _context.Genres.FirstOrDefaultAsync(g => g.Name == name);
+        }
     }
 }

@@ -4,7 +4,9 @@ using IndieVault.Models;
 using IndieVault.Repositories.Implementations;
 using IndieVault.Repositories.Interfaces;
 using IndieVault.Services.Implementations;
+using IndieVault.Services.Implementations.ExternalApis;
 using IndieVault.Services.Interfaces;
+using IndieVault.Services.Interfaces.ExternalApis;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,6 +27,13 @@ builder.Services.AddHttpClient<IGitHubService, GitHubService>(httpClient =>
     httpClient.BaseAddress = new Uri("https://api.github.com/");
     httpClient.DefaultRequestHeaders.Add("User-Agent", "IndieVault");
 });
+
+builder.Services.AddHttpClient<IRawgApiService, RawgApiService>(
+    httpClient =>
+{
+    httpClient.BaseAddress = new Uri("https://api.rawg.io/api/");
+    httpClient.DefaultRequestHeaders.Add("User-Agent", "IndieVault");
+}); 
 
 // Register repositories
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();

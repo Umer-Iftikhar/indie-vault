@@ -16,7 +16,7 @@ namespace IndieVault.Models
 
         [Required]
         [DataType(DataType.Currency)]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
+        [Range(0, double.MaxValue)]
         [Column(TypeName = "decimal(18, 2)")]
         public decimal Price { get; set; }
 
@@ -59,5 +59,10 @@ namespace IndieVault.Models
         public List<GameTag> GameTags { get; set; } = new();
         public List<Review> Reviews { get; set; } = new();
         public List<Screenshot> Screenshots { get; set; } = new List<Screenshot>();
+
+        // --- External API Integration ---
+        public int? ExternalApiId { get; set; }
+        public string? ExternalApiSource { get; set; }
+        public bool IsFromExternalApi { get; set; } = false;
     }
 }

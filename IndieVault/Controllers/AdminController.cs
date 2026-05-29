@@ -1,6 +1,7 @@
 ﻿
 using IndieVault.DTOs;
 using IndieVault.Services.Interfaces;
+using IndieVault.Services.Interfaces.ExternalApis;
 using IndieVault.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,14 @@ namespace IndieVault.Controllers
     public class AdminController : Controller
     {
         private readonly IAdminService _adminService;
+        private readonly IRawgApiService _rawgApiService;
+        private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IAdminService adminService)
+        public AdminController(IAdminService adminService, IRawgApiService rawgApiService, ILogger<AdminController> logger)
         {
             _adminService = adminService;
+            _rawgApiService = rawgApiService;
+            _logger = logger;
         }
         [HttpGet]
         public async Task<IActionResult> Dashboard()
@@ -100,7 +105,24 @@ namespace IndieVault.Controllers
             await _adminService.IsGameFeatureAsync(gameId);
 
             return RedirectToAction(nameof(Dashboard));
-
         }   
+        [HttpPost]
+        public async Task<IActionResult> SyncGames()
+        {
+            try
+            {
+                int syncedCount = await _rawgApiService.SynchronizeGamesFromApiAsync();
+
+                TempData["Message"] = $"{syncedCount} games synced successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "RAWG sync failed. Check logs.";
+
+                // optional but smart
+                _logger.LogError(ex, "RAWG sync failed");
+            }
+            return RedirectToAction(nameof(Dashboard));
+        }
     }
 }

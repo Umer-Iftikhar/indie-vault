@@ -11,5 +11,8 @@ namespace IndieVault.Repositories.Interfaces
         Task<int> GetGameCountByDevIdAsync(string devId);
         Task<bool> GameExistsByGenreIdAsync(int genreId);
         Task<int> CountGamesAsync();
+
+        // Check for existing game by title or external ID
+        Task<bool> GameExistsByTitleOrExternalIdAsync(string title, int externalId);
     }
 }
