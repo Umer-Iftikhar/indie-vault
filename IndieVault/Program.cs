@@ -9,8 +9,20 @@ using IndieVault.Services.Interfaces;
 using IndieVault.Services.Interfaces.ExternalApis;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
+
+Log.Logger = new LoggerConfiguration() // Configure Serilog to log at the Information level and above, with specific overrides for certain namespaces
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .WriteTo.Console()
+    .WriteTo.File("logs/app.log", rollingInterval: RollingInterval.Day) // Write logs to a file with daily rolling intervals
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog(); //  it replaces the default ASP.NET Core logging provider with Serilog globally. 
 
 builder.Services.AddControllersWithViews();
 
@@ -116,4 +128,18 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 
-app.Run();
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    // Log any unhandled exceptions that occur during application startup or runtime
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    // Ensure that all logs are flushed and resources are released properly when the application is shutting down
+    // This is important to ensure that all log entries are written to the configured sinks (e.g., console, file) before the application exits.
+    Log.CloseAndFlush();
+}
