@@ -67,10 +67,15 @@ and admins can manage the platform.
 - xUnit (unit tests)
 
 ## Architecture
+- Clean Architecture with separation of concerns
+- Repository Pattern for abstracted data access
+- Service Layer for business logic encapsulation  
+- DTOs for decoupling presentation from domain models
+- Dependency Injection throughout (constructor injection)
 - MVC pattern with ViewModels and DTOs
 - Hybrid data access: EF Core for writes, Dapper for complex reads
-- Service layer for GitHub API integration
-- Custom middleware for global exception handling
+- External API integration: GitHub API (developer profiles), RAWG API (game data sync)
+- Custom middleware for global exception handling and request logging
 - Role-based authorization throughout
 
 ## Setup
@@ -128,6 +133,7 @@ IndieVault/
 ├── DTOs/             — Service layer data transfer
 ├── Views/            — Razor templates
 ├── Services/         — Business logic and external APIs
+├── Repositories/     — Data access interfaces and implementations
 ├── Data/             — DbContext, migrations, seeder
 ├── Middleware/       — Global exception handling
 ├── Extensions/       — Middleware registration extensions

@@ -36,9 +36,8 @@ namespace IndieVault.Models
         [StringLength(500)]
         public string CoverImagePath { get; set; } = string.Empty;
 
-        [Required]
         [StringLength(500)]
-        public string DownloadLink { get; set; } = string.Empty;
+        public string? DownloadLink { get; set; } = string.Empty;
 
         public bool IsFeatured { get; set; } = false;
 

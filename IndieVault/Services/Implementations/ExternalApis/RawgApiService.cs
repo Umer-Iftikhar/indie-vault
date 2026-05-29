@@ -54,13 +54,15 @@ namespace IndieVault.Services.Implementations.ExternalApis
 
             var admin = await _userManager.GetUsersInRoleAsync("Admin"); // Assign "Admin" user as developer for imported games. 
 
+            var domain = rawgGameDto.Stores.FirstOrDefault()?.Store?.Domain;
+
             return new RawgGameUploadDto
             {
                 Title = rawgGameDto.Title,
                 DeveloperId = admin.FirstOrDefault()?.Id ?? throw new InvalidOperationException("No admin user found to assign as developer for the imported game."),
                 ReleaseDate = rawgGameDto.ReleaseDate,
                 Price = 0,
-                DownloadLink = rawgGameDto.Stores.FirstOrDefault()?.Store?.Domain ?? "No download link available.",
+                DownloadLink = domain != null ? $"https://{domain}" : null,
                 CoverImagePath = rawgGameDto.CoverImage,
                 ExternalApiId = rawgGameDto.ExternalApiId,
                 ExternalApiSource = "RAWG",
