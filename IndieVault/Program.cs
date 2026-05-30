@@ -62,11 +62,13 @@ builder.Services.AddScoped<IDownloadRepository, DownloadRepository>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 var serverVersion = new MySqlServerVersion(new Version(8, 0, 31));
 
 builder.Services.AddDbContext<IndieVault.Data.AppDbContext>
 (
-    options => options.UseMySql(connectionString, serverVersion)
+    options => options.UseMySql(connectionString, serverVersion,
+    mySqlOptions => mySqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
 );
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
