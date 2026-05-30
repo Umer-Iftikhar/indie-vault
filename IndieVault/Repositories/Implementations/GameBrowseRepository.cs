@@ -69,9 +69,11 @@ namespace IndieVault.Repositories.Implementations
             // Combined SQL string
             var sql = $@"
                  -- 1. Get the Data
-                SELECT g.Title, g.Price, g.ReleaseDate, gen.Name AS GenreName, COALESCE(AVG(re.Rating), 0) AS AverageRatings, g.Id, g.CoverImagePath,
+                SELECT g.Title, g.Price, g.ReleaseDate, gen.Name AS GenreName, 
+                    COALESCE(AVG(re.Rating), 0) AS AverageRatings, g.Id, g.CoverImagePath,
                 (
-                    SELECT u.UserName FROM aspnetusers u 
+                    SELECT u.UserName 
+                    FROM aspnetusers u 
                     WHERE u.Id = g.DeveloperId
                 ) 
                 AS Developer

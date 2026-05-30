@@ -1,6 +1,6 @@
 ﻿using IndieVault.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace IndieVault.Data
 {
@@ -27,18 +27,9 @@ namespace IndieVault.Data
         {
             base.OnModelCreating(builder);
 
-            //Composite key for GameTag
-            builder.Entity<GameTag>().HasKey(gt => new { gt.GameId, gt.TagId });
-
-            //Composite key for GamePlatform
-            builder.Entity<GamePlatform>().HasKey(gp => new { gp.GameId, gp.PlatformId });
-
-            // Unique constraints
-            builder.Entity<Platform>().HasIndex(p => p.Name).IsUnique();
-            builder.Entity<Genre>().HasIndex(g => g.Name).IsUnique();
-            builder.Entity<Tag>().HasIndex(t => t.Name).IsUnique();
-            builder.Entity<Engine>().HasIndex(e => e.Name).IsUnique();
-            builder.Entity<ApplicationUser>().HasIndex(u => u.NormalizedEmail).IsUnique();
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+            /*Assembly.GetExecutingAssembly() — gets the current project's assembly (IndieVault project compiled into a .dll).
+            ApplyConfigurationsFromAssembly(...) — scans that assembly, finds every class that implements IEntityTypeConfiguration<T>, and calls Configure() on each one automatically.*/
         }
     }
 }
