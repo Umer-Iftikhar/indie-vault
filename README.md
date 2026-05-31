@@ -215,10 +215,24 @@ dotnet test
 wwwroot/images/games/{gameId}/
 ```
 
-* Error logs are written to:
+```md
+## Logging
+
+The application uses Serilog for structured logging.
+
+Features:
+- Daily rolling log files
+- Request logging middleware
+- Global exception logging
+- Separate log storage directory (`Logs/`)
+
+Example log structure:
 
 ```text
-errors.log
+Logs/
+├── app-2026-05-30.log
+├── app-2026-05-31.log
+└── app-2026-06-01.log
 ```
 
 in the project root.
