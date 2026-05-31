@@ -1,6 +1,7 @@
 ﻿using IndieVault.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace IndieVault.Data
 {
@@ -26,6 +27,11 @@ namespace IndieVault.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            foreach (var entity in builder.Model.GetEntityTypes())
+            {
+                entity.SetTableName(entity.GetTableName()?.ToLower());
+            }
 
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
             /*Assembly.GetExecutingAssembly() — gets the current project's assembly (IndieVault project compiled into a .dll).
