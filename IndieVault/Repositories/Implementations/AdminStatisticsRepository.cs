@@ -21,8 +21,8 @@ namespace IndieVault.Repositories.Implementations
         {
             var sql = @"
                    SELECT g.Title, COUNT(*) as WishlistCount
-                   FROM Wishlists w
-                   INNER JOIN Games g ON w.GameId = g.Id
+                   FROM wishlists w
+                   INNER JOIN games g ON w.GameId = g.Id
                    GROUP BY g.Title
                    ORDER BY WishlistCount DESC
                    LIMIT 1;";
@@ -35,9 +35,9 @@ namespace IndieVault.Repositories.Implementations
                 SELECT 
                     r.Name AS RoleName, 
                     COUNT(ur.UserId) AS UserCount
-                 FROM AspNetRoles r
-                 INNER JOIN AspNetUserRoles ur ON r.Id = ur.RoleId
-                 INNER JOIN AspNetUsers u ON ur.UserId = u.Id
+                 FROM aspnetroles r
+                 INNER JOIN aspretuserroles ur ON r.Id = ur.RoleId
+                 INNER JOIN aspretusers u ON ur.UserId = u.Id
                  GROUP BY r.Name;";
             using var connection = CreateConnection();
             var result = await connection.QueryAsync<UserByRoleDto>(sql);

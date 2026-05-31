@@ -30,10 +30,10 @@ namespace IndieVault.Services.Implementations.ExternalApis
             _engineRepository = engineRepository;
             _userManager = userManager;
         }
-        private string GetApiKey()
-        {
-            return _configuration["RawgApi:Key"] ?? throw new InvalidOperationException("RAWG API key is not configured.");
-        }
+            private string GetApiKey()
+            {
+                return _configuration["RawgApi:Key"] ?? throw new InvalidOperationException("RAWG API key is not configured.");
+            }
 
         // <summary>
         // Maps a RawgGameDto to a RawgGameUploadDto for creating a new game in the system.

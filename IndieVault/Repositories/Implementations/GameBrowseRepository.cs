@@ -30,7 +30,7 @@ namespace IndieVault.Repositories.Implementations
                             from  aspnetusers u
                             where u.Id = g.DeveloperId
                         ) AS Developer
-                        from Games g
+                        from games g
                         left Join genres gen ON g.GenreId = gen.Id
                         Left Join reviews re  ON g.Id = re.GameId 
                         where g.IsFeatured = true
