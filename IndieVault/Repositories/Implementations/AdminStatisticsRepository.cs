@@ -36,8 +36,8 @@ namespace IndieVault.Repositories.Implementations
                     r.Name AS RoleName, 
                     COUNT(ur.UserId) AS UserCount
                  FROM aspnetroles r
-                 INNER JOIN aspretuserroles ur ON r.Id = ur.RoleId
-                 INNER JOIN aspretusers u ON ur.UserId = u.Id
+                 INNER JOIN aspnetuserroles ur ON r.Id = ur.RoleId
+                 INNER JOIN aspnetusers u ON ur.UserId = u.Id
                  GROUP BY r.Name;";
             using var connection = CreateConnection();
             var result = await connection.QueryAsync<UserByRoleDto>(sql);
