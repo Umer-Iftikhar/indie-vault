@@ -2,6 +2,11 @@
 
 A full-stack ASP.NET Core MVC web application where indie game developers can showcase their work, players can discover and download games, and admins can manage the platform.
 
+## 🌐 Live Demo
+**[indie-vault-production.up.railway.app](https://indie-vault-production.up.railway.app)**
+
+> Note: First load may take 30 seconds if the server is waking up.
+
 ## ⚠️ Project Status
 
 * Main branch: Active development (may contain incomplete or changing features)
@@ -66,7 +71,7 @@ A full-stack ASP.NET Core MVC web application where indie game developers can sh
 
 ## Technologies
 
-* ASP.NET Core 10 MVC
+* ASP.NET Core 9 MVC
 * Entity Framework Core (Code-First, Fluent API)
 * Dapper (read-heavy queries)
 * MySQL
