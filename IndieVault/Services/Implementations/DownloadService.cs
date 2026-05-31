@@ -9,17 +9,22 @@ namespace IndieVault.Services.Implementations
     {
         private readonly IGameRepository _gameRepository;
         private readonly IDownloadRepository _downloadRepository;
-        public DownloadService(IGameRepository gameRepository, IDownloadRepository downloadRepository)
+        private readonly ILogger<DownloadService> _logger;
+        public DownloadService(IGameRepository gameRepository, IDownloadRepository downloadRepository, ILogger<DownloadService> logger)
         {
             _gameRepository = gameRepository;
             _downloadRepository = downloadRepository;
+            _logger = logger;
         }
         public async Task<string> DownloadGameAsync(int gameId, string userId)
         {
+            _logger.LogInformation("User {UserId} attempting to download game {GameId}", userId, gameId);
+
             // Check if the game exists
             var game = await _gameRepository.GetByIdAsync(gameId);
             if (game == null)
             {
+                _logger.LogWarning("Download failed: Game {GameId} not found for user {UserId}", gameId, userId);
                 throw new KeyNotFoundException("Game not found.");
             }
 
@@ -33,10 +38,14 @@ namespace IndieVault.Services.Implementations
 
             // Save the download history to the database
             await _downloadRepository.CreateAsync(model);
+            _logger.LogInformation("Download recorded for user {UserId}, game {GameId}. Returning download link.", userId, gameId);
+
             return game.DownloadLink;
         }
         public async Task<List<DownloadHistoryDto>> GetDownloadHistoryAsync(string userId)
         {
+            _logger.LogInformation("Retrieving download history for user {UserId}", userId);
+
             // Retrieve the download history for the user
             var gameList = await _downloadRepository.GetDownloadHistoryByUserIdAsync(userId);
 
@@ -47,6 +56,7 @@ namespace IndieVault.Services.Implementations
                 GameName = g.Game.Title,
                 DownloadTime = g.DownloadDate
             }).ToList();
+
         }
     }
 }

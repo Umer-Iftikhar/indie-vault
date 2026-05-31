@@ -33,7 +33,7 @@ namespace IndieVault.Services.Implementations
             _platformRepository = platformRepository;
             _tagRepository = tagRepository;
             _gameRepository = gameRepository;
-            _screenshotRepository = screenshotRepository;
+            _screenshotRepository = screenshotRepository;   
             _wishlistRepository = wishlistRepository;
             _reviewRepository = reviewRepository;
             _logger = logger;
@@ -43,6 +43,8 @@ namespace IndieVault.Services.Implementations
         public async Task<GameFormDataDto> GetFormDataAsync()
         {
             // Retrieve all genres, engines, platforms, and tags from the database using the respective repositories  
+            _logger.LogInformation("Retrieving game form data (genres, engines, platforms, tags)");
+
             var genreEntities = await _genreRepository.GetAllAsync();
             var engineEntities = await _engineRepository.GetAllAsync();
             var platformEntities = await _platformRepository.GetAllAsync();
@@ -53,6 +55,8 @@ namespace IndieVault.Services.Implementations
             var engines = engineEntities.Select(e => new LookupDto { Id = e.Id, Name = e.Name }).ToList();
             var platforms = platformEntities.Select(p => new LookupDto { Id = p.Id, Name = p.Name }).ToList();
             var tags = tagEntities.Select(t => new LookupDto { Id = t.Id, Name = t.Name }).ToList();
+
+            _logger.LogInformation("Form data retrieved: {GenreCount} genres, {EngineCount} engines, {PlatformCount} platforms, {TagCount} tags", genres.Count, engines.Count, platforms.Count, tags.Count);
 
             // Return a GameFormDataDto containing the lists of genres, engines, platforms, and tags to be used in the game upload/edit form
             return new GameFormDataDto
@@ -65,6 +69,8 @@ namespace IndieVault.Services.Implementations
         }
         public async Task UploadGameAsync(GameUploadDto uploadDto, string userId)
         {
+            _logger.LogInformation("Uploading new game for developer {UserId}. Title: {Title}", userId, uploadDto.Title);
+
             // 1. Create a new Game entity and populate its properties with the data from the GameUploadDto
             var game = new Game
             {
@@ -82,6 +88,7 @@ namespace IndieVault.Services.Implementations
                 GameTags = uploadDto.SelectedTags?.Select(t => new GameTag { TagId = Convert.ToInt32(t) }).ToList() ?? new List<GameTag>()
             };
             await _gameRepository.CreateAsync(game); // Save the game to the database to generate an ID for file storage
+            _logger.LogInformation("Game created with ID {GameId}", game.Id);
 
             // Handle file uploads (cover image)
 
@@ -90,20 +97,32 @@ namespace IndieVault.Services.Implementations
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
+                _logger.LogInformation("Created directory for game images: {Directory}", uploadsFolder);
             }
 
             if (uploadDto.CoverImage != null)
             {
-                // Save the cover image to the server
-                var coverExtension = Path.GetExtension(uploadDto.CoverImage.FileName); // Get the file extension to preserve it
-                var coverName = $"cover{coverExtension}";
-                var coverPath = Path.Combine(uploadsFolder, coverName);
-                using (var fileStream = new FileStream(coverPath, FileMode.Create)) // Save the file to the server
+                try
                 {
-                    await uploadDto.CoverImage.CopyToAsync(fileStream);
+
+
+                    // Save the cover image to the server
+                    var coverExtension = Path.GetExtension(uploadDto.CoverImage.FileName); // Get the file extension to preserve it
+                    var coverName = $"cover{coverExtension}";
+                    var coverPath = Path.Combine(uploadsFolder, coverName);
+                    using (var fileStream = new FileStream(coverPath, FileMode.Create)) // Save the file to the server
+                    {
+                        await uploadDto.CoverImage.CopyToAsync(fileStream);
+                    }
+                    // Set the cover image path relative to wwwroot for later retrieval
+                    game.CoverImagePath = $"/images/games/{game.Id}/{coverName}";
+                    _logger.LogInformation("Cover image saved for game {GameId}: {Path}", game.Id, game.CoverImagePath);
                 }
-                // Set the cover image path relative to wwwroot for later retrieval
-                game.CoverImagePath = $"/images/games/{game.Id}/{coverName}";
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to save cover image for game {GameId}", game.Id);
+                    throw; // Re-throw because game creation would be incomplete
+                }
             }
 
             // Handle file uploads (screenshots)
@@ -114,31 +133,43 @@ namespace IndieVault.Services.Implementations
 
                 foreach (var file in uploadDto.Screenshots)
                 {
-                    var sExtension = Path.GetExtension(file.FileName);
-                    var sName = $"screen_{count++}{sExtension}";
-                    var sPath = Path.Combine(uploadsFolder, sName);
+                    try
+                    {
+                        var sExtension = Path.GetExtension(file.FileName);
+                        var sName = $"screen_{count++}{sExtension}";
+                        var sPath = Path.Combine(uploadsFolder, sName);
 
-                    using (var stream = new FileStream(sPath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
+                        using (var stream = new FileStream(sPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+                        // Add the screenshot path to the database
+                        screenshotList.Add(new Screenshot
+                        {
+                            ImagePath = $"/images/games/{game.Id}/{sName}",
+                            GameId = game.Id
+                        });
                     }
-                    // Add the screenshot path to the database
-                    screenshotList.Add(new Screenshot
+                    catch (Exception ex)
                     {
-                        ImagePath = $"/images/games/{game.Id}/{sName}",
-                        GameId = game.Id
-                    });
+                        _logger.LogError(ex, "Failed to save screenshot for game {GameId}", game.Id);
+                        throw;
+                    }
                 }
                 await _screenshotRepository.AddScreenshotsAsync(screenshotList);
+                _logger.LogInformation("Added {Count} screenshots for game {GameId}", screenshotList.Count, game.Id);
             }
             // 6. Save changes again to update CoverPath and add Screenshots
             await _gameRepository.UpdateAsync(game);
+            _logger.LogInformation("Game upload completed for game {GameId}", game.Id);
 
         }
         public async Task<List<MyGameDto>> GetMyGamesAsync(string userId)
         {
+            _logger.LogInformation("Fetching games for developer {UserId}", userId);
             // Retrieve all games developed by the current user using the game repository
             var games = await _gameRepository.GetGamesByDevIdAsync(userId);
+            _logger.LogInformation("Found {Count} games for developer {UserId}", games.Count, userId);
 
             // Map the retrieved Game entities to MyGameDto objects, which contain only the necessary properties for displaying in the "My Games" section
             return games.Select(g => new MyGameDto
@@ -154,36 +185,56 @@ namespace IndieVault.Services.Implementations
         }
         public async Task DeleteGameAsync(int gameId, string userId)
         {
+            _logger.LogInformation("User {UserId} attempting to delete game {GameId}", userId, gameId);
             // Retrieve the game from the database and ensure that it belongs to the current user before allowing deletion
             var game = await _gameRepository.GetGameIfOwnerAsync(gameId, userId);
             if (game == null)
             {
+                _logger.LogWarning("Delete failed: Game {GameId} not found or user {UserId} is not owner", gameId, userId);
                 throw new InvalidOperationException("Game not found or access denied.");
             }
             // Delete associated screenshots from the server
             var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", gameId.ToString());
             if (Directory.Exists(gameFolder))
             {
-                Directory.Delete(gameFolder, true);
+                try
+                {
+                    Directory.Delete(gameFolder, true);
+                    _logger.LogInformation("Deleted game folder {Folder}", gameFolder);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to delete game folder for game {GameId}", gameId);
+                    // Continue to delete from DB even if folder deletion fails
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Game folder not found for deletion: {Folder}", gameFolder);
             }
 
             await _gameRepository.DeleteAsync(gameId); // Delete the game from the database
+            _logger.LogInformation("Game {GameId} deleted successfully by user {UserId}", gameId, userId);
         }
         public async Task<GameEditDto> GetGameForEditAsync(int gameId, string userId)
         {
+            _logger.LogInformation("User {UserId} retrieving game {GameId} for edit", userId, gameId);
             // Retrieve the game along with its related platforms and tags 
             var game = await _gameRepository.GetGameWithPlatformsAndTagsAsync(gameId);
 
             // Ensure the game exists and belongs to the current user before allowing access to edit
             if (game == null)
             {
+                _logger.LogWarning("Game {GameId} not found for edit by user {UserId}", gameId, userId);
                 throw new InvalidOperationException("Game not found.");
             }
             if (game.DeveloperId != userId)
             {
+                _logger.LogWarning("User {UserId} attempted to edit game {GameId} which belongs to developer {DeveloperId}", userId, gameId, game.DeveloperId);
                 throw new UnauthorizedAccessException("You do not have permission to edit this game.");
             }
 
+            _logger.LogInformation("Returning edit data for game {GameId}", gameId);
             // Map the Game entity to a GameEditDto
             return new GameEditDto
             {
@@ -202,15 +253,18 @@ namespace IndieVault.Services.Implementations
         }
         public async Task UpdateGameAsync(GameUpdateDto updateDto, string userId)
         {
+            _logger.LogInformation("User {UserId} updating game {GameId}", userId, updateDto.Id);
             // Retrieve the game from the database.
             var game = await _gameRepository.GetGameWithPlatformsAndTagsAsync(updateDto.Id);
 
             if (game == null)
             {
+                _logger.LogWarning("Game {GameId} not found for update by user {UserId}", updateDto.Id, userId);
                 throw new ArgumentException("Game not found.");
             }
             if (game.DeveloperId != userId)
             {
+                _logger.LogWarning("User {UserId} attempted to update game {GameId} owned by {DeveloperId}", userId, updateDto.Id, game.DeveloperId);
                 throw new UnauthorizedAccessException("You do not have permission to edit this game.");
             }
 
@@ -243,79 +297,104 @@ namespace IndieVault.Services.Implementations
             // Handle cover image update
             if (updateDto.CoverImage != null)
             {
-                var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", game.Id.ToString());
-                if (!Directory.Exists(gameFolder))
+                try
                 {
-                    Directory.CreateDirectory(gameFolder);
+                    var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", game.Id.ToString());
+                    if (!Directory.Exists(gameFolder))
+                    {
+                        Directory.CreateDirectory(gameFolder);
+                        _logger.LogInformation("Created directory for game images during update: {Folder}", gameFolder);
+                    }
+                    var coverExtension = Path.GetExtension(updateDto.CoverImage.FileName);
+                    var coverName = $"cover{coverExtension}";
+                    var coverPath = Path.Combine(gameFolder, coverName);
+                    using (var stream = new FileStream(coverPath, FileMode.Create))
+                    {
+                        await updateDto.CoverImage.CopyToAsync(stream);
+                    }
+                    game.CoverImagePath = $"/images/games/{game.Id}/{coverName}";
+                    _logger.LogInformation("Updated cover image for game {GameId}", game.Id);
                 }
-                var coverExtension = Path.GetExtension(updateDto.CoverImage.FileName);
-                var coverName = $"cover{coverExtension}";
-                var coverPath = Path.Combine(gameFolder, coverName);
-                using (var stream = new FileStream(coverPath, FileMode.Create))
+                catch (Exception ex)
                 {
-                    await updateDto.CoverImage.CopyToAsync(stream);
+                    _logger.LogError(ex, "Failed to update cover image for game {GameId}", game.Id);
+                    throw;
                 }
-                game.CoverImagePath = $"/images/games/{game.Id}/{coverName}";
             }
             // Handle Screenshot update
             if (updateDto.Screenshots != null && updateDto.Screenshots.Any())
             {
-                var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", game.Id.ToString());
-
-                // 1. Remove old screenshot records from DB
-                await _screenshotRepository.DeleteScreenshotsByGameIdAsync(game.Id);
-
-                // 2. Physical Cleanup: Delete old files that aren't the cover
-                if (Directory.Exists(gameFolder))
+                try
                 {
-                    var files = Directory.GetFiles(gameFolder, "screenshot_*");
-                    foreach (var file in files)
+                    var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", game.Id.ToString());
+
+                    // 1. Remove old screenshot records from DB
+                    await _screenshotRepository.DeleteScreenshotsByGameIdAsync(game.Id);
+                    _logger.LogInformation("Deleted old screenshots records for game {GameId}", game.Id);
+
+                    // 2. Physical Cleanup: Delete old files that aren't the cover
+                    if (Directory.Exists(gameFolder))
                     {
-                        System.IO.File.Delete(file);
+                        var files = Directory.GetFiles(gameFolder, "screenshot_*");
+                        foreach (var file in files)
+                        {
+                            System.IO.File.Delete(file);
+                            _logger.LogInformation("Deleted old screenshot files for game {GameId}", game.Id);
+                        }
                     }
-                }
-                else
-                {
-                    Directory.CreateDirectory(gameFolder);
-                }
-
-                var screenshotList = new List<Screenshot>();
-
-                // 3. Save new files and add to DB
-                foreach (var file in updateDto.Screenshots)
-                {
-                    // Generate a unique file name for each screenshot to avoid conflicts
-                    var extension = Path.GetExtension(file.FileName);
-                    var fileName = $"screenshot_{Guid.NewGuid()}{extension}";
-                    var filePath = Path.Combine(gameFolder, fileName);
-
-                    // Save the new screenshot to the server
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    else
                     {
-                        await file.CopyToAsync(stream);
+                        Directory.CreateDirectory(gameFolder);
                     }
 
-                    // Add new screenshot record to the database
-                    screenshotList.Add(new Screenshot
+                    var screenshotList = new List<Screenshot>();
+
+                    // 3. Save new files and add to DB
+                    foreach (var file in updateDto.Screenshots)
                     {
-                        GameId = game.Id,
-                        ImagePath = $"/images/games/{game.Id}/{fileName}"
-                    }); ;
+                        // Generate a unique file name for each screenshot to avoid conflicts
+                        var extension = Path.GetExtension(file.FileName);
+                        var fileName = $"screenshot_{Guid.NewGuid()}{extension}";
+                        var filePath = Path.Combine(gameFolder, fileName);
+
+                        // Save the new screenshot to the server
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        // Add new screenshot record to the database
+                        screenshotList.Add(new Screenshot
+                        {
+                            GameId = game.Id,
+                            ImagePath = $"/images/games/{game.Id}/{fileName}"
+                        }); ;
+                    }
+                    // Add the new screenshot to the database using the repository
+                    await _screenshotRepository.AddScreenshotsAsync(screenshotList);
+                    _logger.LogInformation("Added {Count} new screenshots for game {GameId}", screenshotList.Count, game.Id);
                 }
-                // Add the new screenshot to the database using the repository
-                await _screenshotRepository.AddScreenshotsAsync(screenshotList);
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to update screenshots for game {GameId}", game.Id);
+                    throw;
+                }
             }
             await _gameRepository.UpdateAsync(game);
+            _logger.LogInformation("Game {GameId} updated successfully by user {UserId}", game.Id, userId);
         }
         public async Task<GameDetailDto> GetGameDetailsAsync(int gameId, string userId)
         {
+            _logger.LogInformation("Fetching details for game {GameId}, user {UserId}", gameId, userId);
             // Retrieve the game along with all its related data using the game repository
             var game = await _gameRepository.GetGameWithDetailsAsync(gameId);
 
             if (game == null)
             {
+                _logger.LogWarning("Game {GameId} not found when requesting details", gameId);
                 throw new ArgumentException("Game not found.");
             }
+
             return new GameDetailDto // Map the Game entity to GameDetailDto, including related data and user-specific info
             {
                 GameId = game.Id,
@@ -353,7 +432,10 @@ namespace IndieVault.Services.Implementations
 
         public async Task<int> GetDevGameCountAsync(string userId)
         {
-            return await _gameRepository.GetGameCountByDevIdAsync(userId);
+            _logger.LogInformation("Getting game count for developer {UserId}", userId);
+            var count = await _gameRepository.GetGameCountByDevIdAsync(userId);
+            _logger.LogInformation("Developer {UserId} has {Count} games", userId, count);
+            return count;
         }
 
         // /<summary>
@@ -362,6 +444,7 @@ namespace IndieVault.Services.Implementations
         /// /<summary>
         public async Task<bool> CreateGameFromApiAsync(RawgGameUploadDto dto)
         {
+            _logger.LogInformation("Creating game from API data. Title: {Title}, ExternalApiSource: {Source}", dto.Title, dto.ExternalApiSource);
             try
             {
                 // Create a new Game entity and populate its properties with data from the RawgGameUploadDto
@@ -382,12 +465,13 @@ namespace IndieVault.Services.Implementations
                     IsFromExternalApi = dto.IsFromExternalApi
                 };
                 await _gameRepository.CreateAsync(game); // Save the new game to the database
+                _logger.LogInformation("Successfully created game from API. GameId: {GameId}, Title: {Title}", game.Id, game.Title);
                 return true; // Indicate that the game was successfully created
             }
             catch (Exception ex)
             {
                 // Log the exception 
-                _logger.LogError(ex, "Error creating game from API: {Title}", dto.Title);
+                _logger.LogError(ex, "Error creating game from API: {Title}, ExternalApiId: {ExternalApiId}", dto.Title, dto.ExternalApiId);
                 return false; // Indicate that there was an error creating the game
             }
         }
