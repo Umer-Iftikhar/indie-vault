@@ -28,14 +28,14 @@ namespace IndieVault.Data
         {
             base.OnModelCreating(builder);
 
+            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+            /*Assembly.GetExecutingAssembly() — gets the current project's assembly (IndieVault project compiled into a .dll).
+            ApplyConfigurationsFromAssembly(...) — scans that assembly, finds every class that implements IEntityTypeConfiguration<T>, and calls Configure() on each one automatically.*/
+
             foreach (var entity in builder.Model.GetEntityTypes())
             {
                 entity.SetTableName(entity.GetTableName()?.ToLower());
             }
-
-            builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-            /*Assembly.GetExecutingAssembly() — gets the current project's assembly (IndieVault project compiled into a .dll).
-            ApplyConfigurationsFromAssembly(...) — scans that assembly, finds every class that implements IEntityTypeConfiguration<T>, and calls Configure() on each one automatically.*/
         }
     }
 }
