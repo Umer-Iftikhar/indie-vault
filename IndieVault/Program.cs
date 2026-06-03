@@ -80,7 +80,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
     options.Password.RequiredUniqueChars = 1;
-    options.User.AllowedUserNameCharacters = string.Empty; 
     options.User.RequireUniqueEmail = true;
 
     // Optional: Lockout settings
