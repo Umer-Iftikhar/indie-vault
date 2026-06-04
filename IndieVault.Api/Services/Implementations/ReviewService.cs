@@ -1,7 +1,7 @@
 ﻿using IndieVault.Api.Services.Interfaces;
-using IndieVault.Api.DTOs;
 using IndieVault.Api.Models;
 using IndieVault.Api.Repositories.Interfaces;
+using IndieVault.Api.DTOs.Review.Requests;
 
 namespace IndieVault.Api.Services.Implementations
 {

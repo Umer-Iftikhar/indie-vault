@@ -1,4 +1,5 @@
-﻿using IndieVault.Api.DTOs;
+﻿using IndieVault.Api.DTOs.Game.Responses;
+using IndieVault.Api.DTOs.Shared;
 using IndieVault.Api.Enums;
 using IndieVault.Api.Repositories.Interfaces;
 using IndieVault.Api.Services.Interfaces;

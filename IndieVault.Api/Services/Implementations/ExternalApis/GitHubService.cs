@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using IndieVault.Api.Services.Interfaces.ExternalApis;
-using IndieVault.Api.DTOs;
+using IndieVault.Api.DTOs.GitHub.External;
+using IndieVault.Api.DTOs.GitHub.Responses;
 
 namespace IndieVault.Api.Services.Implementations.ExternalApis
 {

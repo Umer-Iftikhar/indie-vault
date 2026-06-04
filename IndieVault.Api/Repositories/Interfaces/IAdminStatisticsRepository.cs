@@ -1,4 +1,4 @@
-﻿using IndieVault.Api.DTOs;
+﻿using IndieVault.Api.DTOs.Admin.Responses;
 
 namespace IndieVault.Api.Repositories.Interfaces
 {

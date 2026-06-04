@@ -1,4 +1,4 @@
-﻿using IndieVault.Api.DTOs;
+﻿using IndieVault.Api.DTOs.Wishlist.Responses;
 
 namespace IndieVault.Api.Services.Interfaces
 {

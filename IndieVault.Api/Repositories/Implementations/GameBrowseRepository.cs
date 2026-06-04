@@ -1,8 +1,9 @@
 ﻿using Dapper;
 using IndieVault.Api.Repositories.Interfaces;
-using IndieVault.Api.DTOs;
 using IndieVault.Api.Enums;
 using MySqlConnector;
+using IndieVault.Api.DTOs.Game.Responses;
+using IndieVault.Api.DTOs.Shared;
 
 namespace IndieVault.Api.Repositories.Implementations
 {

@@ -1,4 +1,6 @@
-﻿using IndieVault.Api.DTOs;
+﻿using IndieVault.Api.DTOs.Game.Requests;
+using IndieVault.Api.DTOs.Game.Responses;
+using IndieVault.Api.DTOs.Rawg.External;
 
 namespace IndieVault.Api.Services.Interfaces
 {

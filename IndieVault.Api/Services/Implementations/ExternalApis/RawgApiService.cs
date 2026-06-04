@@ -1,9 +1,9 @@
 ﻿using IndieVault.Api.Services.Interfaces;
 using IndieVault.Api.Services.Interfaces.ExternalApis;
-using IndieVault.Api.DTOs;
 using IndieVault.Api.Models;
 using IndieVault.Api.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using IndieVault.Api.DTOs.Rawg.External;
 
 namespace IndieVault.Api.Services.Implementations.ExternalApis
 {

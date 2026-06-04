@@ -8,7 +8,6 @@ namespace IndieVault.Api.Repositories.Implementations
     public class Repository<T> : IRepository<T> where T : BaseEntity
     {
         protected readonly AppDbContext _context;
-        private AppDbContext context;
 
         public Repository(AppDbContext context)
         {

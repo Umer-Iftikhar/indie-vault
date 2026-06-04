@@ -1,8 +1,12 @@
 ﻿using IndieVault.Api.Services.Interfaces;
-using IndieVault.Api.DTOs;
 using IndieVault.Api.Models;
 using IndieVault.Api.Repositories.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using IndieVault.Api.DTOs.Game.Responses;
+using IndieVault.Api.DTOs.Game.Requests;
+using IndieVault.Api.DTOs.Review.Responses;
+using IndieVault.Api.DTOs.Rawg.External;
+using IndieVault.Api.DTOs.Shared;
 
 namespace IndieVault.Api.Services.Implementations
 {

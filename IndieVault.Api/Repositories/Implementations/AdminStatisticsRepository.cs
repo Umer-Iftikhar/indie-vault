@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using IndieVault.Api.Repositories.Interfaces;
-using IndieVault.Api.DTOs;
 using MySqlConnector;
+using IndieVault.Api.DTOs.Admin.Responses;
 
 namespace IndieVault.Api.Repositories.Implementations
 {
