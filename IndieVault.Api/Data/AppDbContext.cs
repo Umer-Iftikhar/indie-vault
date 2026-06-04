@@ -23,6 +23,9 @@ namespace IndieVault.Api.Data
         public DbSet<GamePlatform> GamePlatforms { get; set; } = null!;
         public DbSet<GameTag> GameTags { get; set; } = null!;
 
+        // --- Authentication & Authorization ---
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

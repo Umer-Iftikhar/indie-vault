@@ -1,6 +1,13 @@
 
 using IndieVault.Api.Data;
+using IndieVault.Api.Extensions;
 using IndieVault.Api.Models;
+using IndieVault.Api.Repositories.Implementations;
+using IndieVault.Api.Repositories.Interfaces;
+using IndieVault.Api.Services.Implementations;
+using IndieVault.Api.Services.Implementations.ExternalApis;
+using IndieVault.Api.Services.Interfaces;
+using IndieVault.Api.Services.Interfaces.ExternalApis;
 using IndieVault.Api.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +26,47 @@ Log.Logger = new LoggerConfiguration() // Configure Serilog to log at the Inform
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog();
+
+// Register services
+builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddScoped<IGameBrowseService, GameBrowseService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IWishlistService, WishlistService>();
+builder.Services.AddScoped<IDownloadService, DownloadService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+builder.Services.AddHttpClient<IGitHubService, GitHubService>(httpClient =>
+{
+    httpClient.BaseAddress = new Uri("https://api.github.com/");
+    httpClient.DefaultRequestHeaders.Add("User-Agent", "IndieVault");
+});
+
+builder.Services.AddHttpClient<IRawgApiService, RawgApiService>(
+    httpClient =>
+    {
+        httpClient.BaseAddress = new Uri("https://api.rawg.io/api/");
+        httpClient.DefaultRequestHeaders.Add("User-Agent", "IndieVault");
+    });
+
+// Register repositories
+builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<IGameRepository, GameRepository>();
+builder.Services.AddScoped<IPlatformRepository, PlatformRepository>();
+builder.Services.AddScoped<IEngineRepository, EngineRepository>();
+builder.Services.AddScoped<IScreenshotRepository, ScreenshotRepository>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+builder.Services.AddScoped<IAdminStatisticsRepository, AdminStatisticsRepository>();
+builder.Services.AddScoped<IGameBrowseRepository, GameBrowseRepository>();
+builder.Services.AddScoped<IDownloadRepository, DownloadRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+
 
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -51,7 +99,9 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 
 // Add services to the container.
 
-var jwtConfig = builder.Configuration.GetSection("JwtSettings").Get<JwtConfig>();
+var jwtConfig = builder.Configuration.GetSection("JwtSettings").Get<JwtConfig>()
+    ?? throw new InvalidOperationException("JWT configuration section 'JwtSettings' is missing or invalid.");
+
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtSettings"));
 
 builder.Services.AddAuthentication(options =>
@@ -83,6 +133,8 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseGlobalExceptionMiddleware();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -93,8 +145,24 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
+app.UseRequestLoggingMiddleware();
+
 app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+try
+{
+    app.Run();
+}
+catch (Exception ex)
+{
+    // Log any unhandled exceptions that occur during application startup or runtime
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    // Ensure that all logs are flushed and resources are released properly when the application is shutting down
+    // This is important to ensure that all log entries are written to the configured sinks (e.g., console, file) before the application exits.
+    Log.CloseAndFlush();
+}

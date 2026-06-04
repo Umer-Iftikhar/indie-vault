@@ -31,16 +31,12 @@ namespace IndieVault.Api.Middleware
             else
             {
                 // Log the incoming request with method, path, and user information
-                _logger.LogInformation($"Incoming Request: " +
-                $"{context.Request.Method} {requestPath}" +
-                $" User {userName}");
+                _logger.LogInformation("Incoming Request: {Method} {Path} User: {UserName}", context.Request.Method, context.Request.Path, userName);
 
                 await _next(context); // Call the next middleware in the pipeline
 
                 // Log the outgoing response with method, path, and status code
-                _logger.LogInformation($"Outgoing Response: " +
-                    $"{context.Request.Method} {requestPath}" +
-                    $" StatusCode: {context.Response.StatusCode}");
+                _logger.LogInformation("Outgoing Response: {Method} {Path} StatusCode: {StatusCode}", context.Request.Method, context.Request.Path, context.Response.StatusCode);
             }
 
             
