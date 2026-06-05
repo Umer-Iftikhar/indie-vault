@@ -47,7 +47,7 @@ namespace IndieVault.Api.Services.Implementations
             if (wishlistItem == null)
             {
                 _logger.LogWarning("Wishlist entry not found for user {UserId}, game {GameId}", userId, gameId);
-                throw new InvalidOperationException("Wishlist entry not found.");
+                throw new KeyNotFoundException("Wishlist entry not found.");
             }
 
             // Delete the wishlist entry from the database

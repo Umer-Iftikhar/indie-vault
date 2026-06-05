@@ -23,7 +23,7 @@ namespace IndieVault.Api.Controllers
         [Authorize(Roles = "Player")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Create(CreateReviewDto createReviewDto, int gameId)
+        public async Task<ActionResult> Create(CreateReviewDto createReviewDto, int gameId)
         {
             
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Getting the user ID from claims
@@ -46,7 +46,7 @@ namespace IndieVault.Api.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(int reviewId)
+        public async Task<ActionResult> Delete(int reviewId)
         {
             try
             {
