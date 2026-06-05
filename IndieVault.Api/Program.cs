@@ -31,6 +31,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog();
 
+builder.Services.AddMemoryCache();
+
 // Register services
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrowseService, GameBrowseService>();

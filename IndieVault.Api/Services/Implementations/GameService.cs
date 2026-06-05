@@ -7,6 +7,7 @@ using IndieVault.Api.DTOs.Game.Requests;
 using IndieVault.Api.DTOs.Review.Responses;
 using IndieVault.Api.DTOs.Rawg.External;
 using IndieVault.Api.DTOs.Shared;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace IndieVault.Api.Services.Implementations
 {
@@ -23,12 +24,13 @@ namespace IndieVault.Api.Services.Implementations
         private readonly IWishlistRepository _wishlistRepository; // Repository for managing wishlists
         private readonly IReviewRepository _reviewRepository; // Repository for managing reviews
         private readonly ILogger<GameService> _logger;
+        private readonly IMemoryCache _memoryCache;
 
         public GameService
             (IWebHostEnvironment environment, UserManager<ApplicationUser> userManager, IEngineRepository engineRepository,
             IGenreRepository genreRepository, IPlatformRepository platformRepository, ITagRepository tagRepository,
             IGameRepository gameRepository, IScreenshotRepository screenshotRepository, IWishlistRepository wishlistRepository,
-            IReviewRepository reviewRepository, ILogger<GameService> logger  )
+            IReviewRepository reviewRepository, ILogger<GameService> logger, IMemoryCache memoryCache )
         {
             _environment = environment;
             _userManager = userManager;
@@ -41,6 +43,7 @@ namespace IndieVault.Api.Services.Implementations
             _wishlistRepository = wishlistRepository;
             _reviewRepository = reviewRepository;
             _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         // This method retrieves the necessary data for populating the game upload/edit form, such as genres, engines, platforms, and tags.
@@ -49,27 +52,39 @@ namespace IndieVault.Api.Services.Implementations
             // Retrieve all genres, engines, platforms, and tags from the database using the respective repositories  
             _logger.LogInformation("Retrieving game form data (genres, engines, platforms, tags)");
 
-            var genreEntities = await _genreRepository.GetAllAsync();
-            var engineEntities = await _engineRepository.GetAllAsync();
-            var platformEntities = await _platformRepository.GetAllAsync();
-            var tagEntities = await _tagRepository.GetAllAsync();
-
-            // Map the retrieved entities to LookupDto objects, which contain only the Id and Name properties needed for dropdowns in the form
-            var genres = genreEntities.Select(g => new LookupDto { Id = g.Id, Name = g.Name }).ToList();
-            var engines = engineEntities.Select(e => new LookupDto { Id = e.Id, Name = e.Name }).ToList();
-            var platforms = platformEntities.Select(p => new LookupDto { Id = p.Id, Name = p.Name }).ToList();
-            var tags = tagEntities.Select(t => new LookupDto { Id = t.Id, Name = t.Name }).ToList();
-
-            _logger.LogInformation("Form data retrieved: {GenreCount} genres, {EngineCount} engines, {PlatformCount} platforms, {TagCount} tags", genres.Count, engines.Count, platforms.Count, tags.Count);
-
-            // Return a GameFormDataDto containing the lists of genres, engines, platforms, and tags to be used in the game upload/edit form
-            return new GameFormDataDto
+            if (_memoryCache.TryGetValue("GameFormData", out GameFormDataDto cachedData))
             {
-                Genres = genres,
-                Engines = engines,
-                Platforms = platforms,
-                Tags = tags
-            };
+                _logger.LogInformation("Game form data retrieved from cache");
+                return cachedData!;
+            }
+            else
+            {
+                _logger.LogInformation("Game form data not found in cache, retrieving from database");
+
+                var genreEntities = await _genreRepository.GetAllAsync();
+                var engineEntities = await _engineRepository.GetAllAsync();
+                var platformEntities = await _platformRepository.GetAllAsync();
+                var tagEntities = await _tagRepository.GetAllAsync();
+
+                // Map the retrieved entities to LookupDto objects, which contain only the Id and Name properties needed for dropdowns in the form
+                var genres = genreEntities.Select(g => new LookupDto { Id = g.Id, Name = g.Name }).ToList();
+                var engines = engineEntities.Select(e => new LookupDto { Id = e.Id, Name = e.Name }).ToList();
+                var platforms = platformEntities.Select(p => new LookupDto { Id = p.Id, Name = p.Name }).ToList();
+                var tags = tagEntities.Select(t => new LookupDto { Id = t.Id, Name = t.Name }).ToList();
+
+                _logger.LogInformation("Form data retrieved: {GenreCount} genres, {EngineCount} engines, {PlatformCount} platforms, {TagCount} tags", genres.Count, engines.Count, platforms.Count, tags.Count);
+
+                // Cache the form data for 1 hour to improve performance for subsequent requests
+                var cashedData = _memoryCache.Set("GameFormData", new GameFormDataDto
+                {
+                    Genres = genres,
+                    Engines = engines,
+                    Platforms = platforms,
+                    Tags = tags
+                }, TimeSpan.FromHours(1));
+
+                return cashedData;
+            }
         }
         public async Task<int> UploadGameAsync(GameUploadDto uploadDto, string userId)
         {
