@@ -39,28 +39,30 @@ namespace IndieVault.Api.Services.Implementations
             }
             _logger.LogInformation("Game {GameId} exists, returning review form", id);
         }
-        public async Task CreateReviewAsync(CreateReviewDto createReviewDto, string userId)
+        public async Task<int> CreateReviewAsync(CreateReviewDto createReviewDto, string userId, int gameId)
         {
-            _logger.LogInformation("User {UserId} creating review for game {GameId} with rating {Rating}", userId, createReviewDto.GameId, createReviewDto.Rating);
+            _logger.LogInformation("User {UserId} creating review for game {GameId} with rating {Rating}", userId, gameId, createReviewDto.Rating);
+
+            var review = new Review
+            {
+                GameId = gameId,
+                UserId = userId,
+                Rating = createReviewDto.Rating,
+                Comment = createReviewDto.Comment,
+                ReviewDate = DateTime.UtcNow
+            };
 
             try
             {
-                var review = new Review
-                {
-                    GameId = createReviewDto.GameId,
-                    UserId = userId,
-                    Rating = createReviewDto.Rating,
-                    Comment = createReviewDto.Comment,
-                    ReviewDate = DateTime.UtcNow
-                };
                 await _reviewRepository.CreateAsync(review);
-                _logger.LogInformation("Review created successfully for game {GameId} by user {UserId}", createReviewDto.GameId, userId);
+                _logger.LogInformation("Review created successfully for game {GameId} by user {UserId}", gameId, userId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create review for game {GameId} by user {UserId}", createReviewDto.GameId, userId);
+                _logger.LogError(ex, "Failed to create review for game {GameId} by user {UserId}", gameId, userId);
                 throw; // Re-throw to let caller handle
             }
+            return review.Id;
         }
         public async Task DeleteReviewAsync(int reviewId, string userId, bool isAdmin)
         {
