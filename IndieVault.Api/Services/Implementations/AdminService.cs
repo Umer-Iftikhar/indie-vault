@@ -51,7 +51,7 @@ namespace IndieVault.Api.Services.Implementations
                 }).ToList()
             };
         }
-        public async Task AdminCreateGenreAsync(string genreName)
+        public async Task<GenreDto> AdminCreateGenreAsync(string genreName)
         {
             _logger.LogInformation("Admin creating genre: {GenreName}", genreName);
             // Check if the genre already exists before creating a new one
@@ -69,6 +69,12 @@ namespace IndieVault.Api.Services.Implementations
             // Save the new genre to the database
             await _genreRepository.CreateAsync(genre);
             _logger.LogInformation("Genre created: {GenreName} with Id {GenreId}", genreName, genre.Id);
+
+            return new GenreDto
+            {
+                GenreId = genre.Id,
+                GenreName = genre.Name
+            };
         }
         public async Task<bool> GenreExistsAsync(string genreName)
         {
