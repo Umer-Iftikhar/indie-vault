@@ -5,6 +5,7 @@ using IndieVault.Api.Services.Interfaces.ExternalApis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace IndieVault.Api.Controllers
 {
@@ -86,6 +87,8 @@ namespace IndieVault.Api.Controllers
         [HttpPost("sync")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        [EnableRateLimiting("FixedPolicy")]
         public async Task<ActionResult> SyncGames()
         {
             try

@@ -11,6 +11,7 @@ using IndieVault.Api.Services.Interfaces.ExternalApis;
 using IndieVault.Api.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -18,6 +19,7 @@ using Serilog;
 using Serilog.Events;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 Log.Logger = new LoggerConfiguration() // Configure Serilog to log at the Information level and above, with specific overrides for certain namespaces
     .MinimumLevel.Information()
@@ -31,9 +33,23 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog();
 
+builder.Services.AddRateLimiter(options => // Configure rate limiting policies to protect the API from abuse and ensure fair usage
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests; 
+    options.AddFixedWindowLimiter("FixedPolicy", opt => // Define a fixed window rate limiting policy named "FixedPolicy"
+    {
+        opt.PermitLimit = 1; // Allow only 1 request per window
+        opt.Window = TimeSpan.FromMinutes(10); // Set the window duration to 10 minutes
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst; // Process queued requests in the order they were received (oldest first)
+        opt.QueueLimit = 0; // Do not allow queuing of requests that exceed the permit limit (requests will be rejected immediately with a 429 Too Many Requests response)
+    });
+});
+
 builder.Services.AddMemoryCache();
 
 // Register services
+builder.Services.AddHostedService<RawgSyncBackgroundService>(); // Register the background service for syncing with RAWG API
+
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IGameBrowseService, GameBrowseService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
@@ -183,6 +199,8 @@ app.UseAuthentication();
 app.UseRequestLoggingMiddleware();
 
 app.UseAuthorization();
+
+app.UseRateLimiter();
 
 app.MapControllers();
 

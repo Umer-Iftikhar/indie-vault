@@ -4,6 +4,7 @@ using IndieVault.Api.Repositories.Interfaces;
 using IndieVault.Api.DTOs.Admin;
 using IndieVault.Api.DTOs.Admin.Responses;
 using IndieVault.Api.DTOs.Shared;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace IndieVault.Api.Services.Implementations
 {
@@ -14,9 +15,10 @@ namespace IndieVault.Api.Services.Implementations
         private readonly IGenreRepository _genreRepository;
         private readonly IAdminStatisticsRepository _adminStatisticsRepository;
         private readonly ILogger<AdminService> _logger;
+        private readonly IMemoryCache _memoryCache;
         public AdminService
                 (IReviewRepository reviewRepository, IGameRepository gameRepository, IGenreRepository genreRepository,
-                IAdminStatisticsRepository adminStatisticsRepository, ILogger<AdminService> logger)
+                IAdminStatisticsRepository adminStatisticsRepository, ILogger<AdminService> logger, IMemoryCache memoryCache)
         {
             _reviewRepository = reviewRepository;
             _gameRepository = gameRepository;
@@ -70,6 +72,9 @@ namespace IndieVault.Api.Services.Implementations
             await _genreRepository.CreateAsync(genre);
             _logger.LogInformation("Genre created: {GenreName} with Id {GenreId}", genreName, genre.Id);
 
+            _memoryCache.Remove("GameFormData");
+            _logger.LogInformation("Game form data cache invalidated after creating genre: {GenreName}", genreName);
+
             return new GenreDto
             {
                 GenreId = genre.Id,
@@ -100,6 +105,9 @@ namespace IndieVault.Api.Services.Implementations
             // If the genre exists and has no associated games, proceed to delete it
             await _genreRepository.DeleteAsync(genreId);
             _logger.LogInformation("Genre {GenreId} deleted successfully", genreId);
+
+            _memoryCache.Remove("GameFormData");
+            _logger.LogInformation("Game form data cache invalidated after deleting genre: {GenreId}", genreId);
         }
         public async Task IsGameFeatureAsync(int gameId)
         {
