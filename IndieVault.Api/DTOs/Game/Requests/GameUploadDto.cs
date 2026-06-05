@@ -11,7 +11,7 @@
         public DateTime ReleaseDate { get; set; }
         public int SelectedGenreId { get; set; }
         public int SelectedEngineId { get; set; }
-        public List<string> SelectedPlatforms { get; set; } = new();
-        public List<string> SelectedTags { get; set; } = new();
+        public List<int> SelectedPlatforms { get; set; } = new();
+        public List<int> SelectedTags { get; set; } = new();
     }
 }

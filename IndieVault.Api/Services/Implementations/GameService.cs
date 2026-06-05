@@ -71,7 +71,7 @@ namespace IndieVault.Api.Services.Implementations
                 Tags = tags
             };
         }
-        public async Task UploadGameAsync(GameUploadDto uploadDto, string userId)
+        public async Task<int> UploadGameAsync(GameUploadDto uploadDto, string userId)
         {
             _logger.LogInformation("Uploading new game for developer {UserId}. Title: {Title}", userId, uploadDto.Title);
 
@@ -88,8 +88,8 @@ namespace IndieVault.Api.Services.Implementations
                 DeveloperId = userId,
                 CreatedDate = DateTime.UtcNow,
                 CoverImagePath = "", // This will be set after handling the file upload
-                GamePlatforms = uploadDto.SelectedPlatforms?.Select(p => new GamePlatform { PlatformId = Convert.ToInt32(p) }).ToList() ?? new List<GamePlatform>(),
-                GameTags = uploadDto.SelectedTags?.Select(t => new GameTag { TagId = Convert.ToInt32(t) }).ToList() ?? new List<GameTag>()
+                GamePlatforms = uploadDto.SelectedPlatforms?.Select(p => new GamePlatform { PlatformId = p }).ToList() ?? new List<GamePlatform>(),
+                GameTags = uploadDto.SelectedTags?.Select(t => new GameTag { TagId = t }).ToList() ?? new List<GameTag>()
             };
             await _gameRepository.CreateAsync(game); // Save the game to the database to generate an ID for file storage
             _logger.LogInformation("Game created with ID {GameId}", game.Id);
@@ -97,7 +97,7 @@ namespace IndieVault.Api.Services.Implementations
             // Handle file uploads (cover image)
 
             // Creating id specific folder: wwwroot/images/games/{id}
-            var uploadsFolder = Path.Combine(_environment.WebRootPath, "images", "games", game.Id.ToString());
+            var uploadsFolder = Path.Combine(_environment.ContentRootPath, "images", "games", game.Id.ToString());
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
@@ -167,6 +167,8 @@ namespace IndieVault.Api.Services.Implementations
             await _gameRepository.UpdateAsync(game);
             _logger.LogInformation("Game upload completed for game {GameId}", game.Id);
 
+            return game.Id; // Return the ID of the newly created game
+
         }
         public async Task<List<MyGameDto>> GetMyGamesAsync(string userId)
         {
@@ -190,15 +192,22 @@ namespace IndieVault.Api.Services.Implementations
         public async Task DeleteGameAsync(int gameId, string userId)
         {
             _logger.LogInformation("User {UserId} attempting to delete game {GameId}", userId, gameId);
+            var gameExists = await _gameRepository.ExistsAsync(gameId);
+            if (!gameExists)
+            {
+                _logger.LogWarning("Delete failed: Game {GameId} not found", gameId);
+                throw new KeyNotFoundException("Game not found.");
+            }
+
             // Retrieve the game from the database and ensure that it belongs to the current user before allowing deletion
             var game = await _gameRepository.GetGameIfOwnerAsync(gameId, userId);
             if (game == null)
             {
-                _logger.LogWarning("Delete failed: Game {GameId} not found or user {UserId} is not owner", gameId, userId);
-                throw new InvalidOperationException("Game not found or access denied.");
+                _logger.LogWarning("Delete failed: User {UserId} is not owner of the game {GameId}", userId, gameId);
+                throw new UnauthorizedAccessException("Access denied.");
             }
             // Delete associated screenshots from the server
-            var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", gameId.ToString());
+            var gameFolder = Path.Combine(_environment.ContentRootPath, "images", "games", gameId.ToString());
             if (Directory.Exists(gameFolder))
             {
                 try
@@ -216,6 +225,8 @@ namespace IndieVault.Api.Services.Implementations
             {
                 _logger.LogWarning("Game folder not found for deletion: {Folder}", gameFolder);
             }
+
+            await _screenshotRepository.DeleteScreenshotsByGameIdAsync(gameId);
 
             await _gameRepository.DeleteAsync(gameId); // Delete the game from the database
             _logger.LogInformation("Game {GameId} deleted successfully by user {UserId}", gameId, userId);
@@ -255,20 +266,20 @@ namespace IndieVault.Api.Services.Implementations
                 SelectedTagIds = game.GameTags.Select(gt => gt.TagId).ToList()
             };
         }
-        public async Task UpdateGameAsync(GameUpdateDto updateDto, string userId)
+        public async Task UpdateGameAsync(GameUpdateDto updateDto, string userId, int gameId)
         {
-            _logger.LogInformation("User {UserId} updating game {GameId}", userId, updateDto.Id);
+            _logger.LogInformation("User {UserId} updating game {GameId}", userId, gameId);
             // Retrieve the game from the database.
-            var game = await _gameRepository.GetGameWithPlatformsAndTagsAsync(updateDto.Id);
+            var game = await _gameRepository.GetGameWithPlatformsAndTagsAsync(gameId);
 
             if (game == null)
             {
-                _logger.LogWarning("Game {GameId} not found for update by user {UserId}", updateDto.Id, userId);
-                throw new ArgumentException("Game not found.");
+                _logger.LogWarning("Game {GameId} not found for update by user {UserId}", gameId, userId);
+                throw new KeyNotFoundException("Game not found.");
             }
             if (game.DeveloperId != userId)
             {
-                _logger.LogWarning("User {UserId} attempted to update game {GameId} owned by {DeveloperId}", userId, updateDto.Id, game.DeveloperId);
+                _logger.LogWarning("User {UserId} attempted to update game {GameId} owned by {DeveloperId}", userId, gameId, game.DeveloperId);
                 throw new UnauthorizedAccessException("You do not have permission to edit this game.");
             }
 
@@ -286,7 +297,7 @@ namespace IndieVault.Api.Services.Implementations
             {
                 foreach (var platform in updateDto.SelectedPlatforms)
                 {
-                    game.GamePlatforms.Add(new GamePlatform { PlatformId = Convert.ToInt32(platform) });
+                    game.GamePlatforms.Add(new GamePlatform { PlatformId = platform });
                 }
             }
             // Update tags
@@ -295,7 +306,7 @@ namespace IndieVault.Api.Services.Implementations
             {
                 foreach (var tag in updateDto.SelectedTags)
                 {
-                    game.GameTags.Add(new GameTag { TagId = Convert.ToInt32(tag) });
+                    game.GameTags.Add(new GameTag { TagId = tag });
                 }
             }
             // Handle cover image update
@@ -303,7 +314,7 @@ namespace IndieVault.Api.Services.Implementations
             {
                 try
                 {
-                    var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", game.Id.ToString());
+                    var gameFolder = Path.Combine(_environment.ContentRootPath, "images", "games", gameId.ToString());
                     if (!Directory.Exists(gameFolder))
                     {
                         Directory.CreateDirectory(gameFolder);
@@ -316,12 +327,12 @@ namespace IndieVault.Api.Services.Implementations
                     {
                         await updateDto.CoverImage.CopyToAsync(stream);
                     }
-                    game.CoverImagePath = $"/images/games/{game.Id}/{coverName}";
-                    _logger.LogInformation("Updated cover image for game {GameId}", game.Id);
+                    game.CoverImagePath = $"/images/games/{gameId}/{coverName}";
+                    _logger.LogInformation("Updated cover image for game {GameId}", gameId);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to update cover image for game {GameId}", game.Id);
+                    _logger.LogError(ex, "Failed to update cover image for game {GameId}", gameId);
                     throw;
                 }
             }
@@ -330,11 +341,11 @@ namespace IndieVault.Api.Services.Implementations
             {
                 try
                 {
-                    var gameFolder = Path.Combine(_environment.WebRootPath, "images", "games", game.Id.ToString());
+                    var gameFolder = Path.Combine(_environment.ContentRootPath, "images", "games", gameId.ToString());
 
                     // 1. Remove old screenshot records from DB
-                    await _screenshotRepository.DeleteScreenshotsByGameIdAsync(game.Id);
-                    _logger.LogInformation("Deleted old screenshots records for game {GameId}", game.Id);
+                    await _screenshotRepository.DeleteScreenshotsByGameIdAsync(gameId);
+                    _logger.LogInformation("Deleted old screenshots records for game {GameId}", gameId);
 
                     // 2. Physical Cleanup: Delete old files that aren't the cover
                     if (Directory.Exists(gameFolder))
@@ -343,7 +354,7 @@ namespace IndieVault.Api.Services.Implementations
                         foreach (var file in files)
                         {
                             System.IO.File.Delete(file);
-                            _logger.LogInformation("Deleted old screenshot files for game {GameId}", game.Id);
+                            _logger.LogInformation("Deleted old screenshot files for game {GameId}", gameId);
                         }
                     }
                     else
@@ -376,16 +387,16 @@ namespace IndieVault.Api.Services.Implementations
                     }
                     // Add the new screenshot to the database using the repository
                     await _screenshotRepository.AddScreenshotsAsync(screenshotList);
-                    _logger.LogInformation("Added {Count} new screenshots for game {GameId}", screenshotList.Count, game.Id);
+                    _logger.LogInformation("Added {Count} new screenshots for game {GameId}", screenshotList.Count, gameId);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to update screenshots for game {GameId}", game.Id);
+                    _logger.LogError(ex, "Failed to update screenshots for game {GameId}", gameId);
                     throw;
                 }
             }
             await _gameRepository.UpdateAsync(game);
-            _logger.LogInformation("Game {GameId} updated successfully by user {UserId}", game.Id, userId);
+            _logger.LogInformation("Game {GameId} updated successfully by user {UserId}", gameId, userId);
         }
         public async Task<GameDetailDto> GetGameDetailsAsync(int gameId, string userId)
         {
@@ -401,7 +412,7 @@ namespace IndieVault.Api.Services.Implementations
 
             return new GameDetailDto // Map the Game entity to GameDetailDto, including related data and user-specific info
             {
-                GameId = game.Id,
+                GameId = gameId,
                 Title = game.Title,
                 Description = game.Description,
                 DeveloperName = game.Developer.UserName!,
