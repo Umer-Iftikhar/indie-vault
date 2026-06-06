@@ -13,9 +13,9 @@ A full-stack web platform where indie game developers can showcase their work, p
  
 - Main branch: Active development
 - Stable releases:
-  - [Phase 8](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-8-complete)
-  - [Phase 9](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-9-complete)
-  - [Phase 10](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-10-complete)
+  - [Version 1](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-8-complete)
+  - [Version 2](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-9-complete)
+  - [Api Conversion](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-10-complete)
 ---
  
 ## Projects
