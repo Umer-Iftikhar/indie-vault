@@ -54,13 +54,13 @@ Stateless REST API with JWT authentication, designed to be consumed by any front
 ![EndPonts](screenshots/all_endpoints.png)
 
 ### Login Endpoint
-![Login](login_endpoint.png)
+![Login](lscreenshots/ogin_endpoint.png)
 
 ### Authorization
-![Auth](auth.png)
+![Auth](screenshots/auth.png)
 
 ### Game Browse EndPoint
-![Game Browse](gamebrowse_endpoint.png)
+![Game Browse](screenshots/gamebrowse_endpoint.png)
 
 ---
  
