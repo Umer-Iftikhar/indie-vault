@@ -224,7 +224,7 @@ DbContext → MySQL
  
 ### Prerequisites
  
-- .NET 10 SDK
+- .NET 9 SDK
 - MySQL Server
 - Visual Studio 2022
 ### MVC Project (IndieVault)
