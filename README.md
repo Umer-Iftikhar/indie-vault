@@ -1,47 +1,30 @@
 # IndieVault 🎮
-
-A full-stack ASP.NET Core MVC web application where indie game developers can showcase their work, players can discover and download games, and admins can manage the platform.
-
+ 
+A full-stack web platform where indie game developers can showcase their work, players can discover and download games, and admins can manage the platform. Built as two applications sharing one database: an ASP.NET Core MVC web app and a REST API with JWT authentication.
+ 
 ## 🌐 Live Demo
+ 
+ # MVC
 **[indie-vault-production.up.railway.app](https://indie-vault-production.up.railway.app)**
-
+ 
 > Note: First load may take 30 seconds if the server is waking up.
-
+ 
 ## ⚠️ Project Status
-
-* Main branch: Active development (may contain incomplete or changing features)
-* Stable releases:
-
-  * [Phase 8](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-8-complete)
-  * Phase 9 (see latest release)
-
+ 
+- Main branch: Active development
+- Stable releases:
+  - [Phase 8](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-8-complete)
+  - [Phase 9](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-9-complete)
+  - [Phase 10](https://github.com/Umer-Iftikhar/indie-vault/releases/tag/phase-10-complete)
 ---
+ 
+## Projects
+ 
+### IndieVault (MVC)
+ 
+Server-rendered web application with Razor views, Bootstrap UI, and cookie-based authentication.
 
-## Roles
-
-* **Game Dev** — Upload, edit, and manage their own games
-* **Player** — Browse, wishlist, download, and review games
-* **Admin** — Manage genres, feature games, sync games from RAWG, and oversee the platform
-
----
-
-## Features
-
-* Role-based authentication with ASP.NET Core Identity
-* Game upload with cover image and screenshots
-* Advanced search, filtering, sorting, and pagination
-* Wishlist functionality with AJAX (no page reload)
-* Review system with 1-5 star ratings
-* Developer profiles with GitHub API integration
-* RAWG API integration for importing real game data
-* Admin dashboard with platform statistics and game sync
-* Global exception handling with file logging
-* Request logging middleware
-* Custom 404 and 500 error pages
-
----
-
-## Screenshots
+### Screenshots
 
 ### Discovery (Home & Search)
 
@@ -51,15 +34,7 @@ A full-stack ASP.NET Core MVC web application where indie game developers can sh
 
 ![Details](screenshots/Game_Details.png)
 
-### Player Interaction
-
-![Empty Wishlist](screenshots/Empty_Wishlist.png)
-
-![Wishlist](screenshots/Wishlist.png)
-
 ### Developer Experience
-
-![Developer Profile](screenshots/Dev_Profile.png)
 
 ![Game Upload](screenshots/Game_Upload.png)
 
@@ -68,52 +43,166 @@ A full-stack ASP.NET Core MVC web application where indie game developers can sh
 ![Admin Dashboard](screenshots/Admin_Dashboard.png)
 
 ---
+ 
+### IndieVault.Api (REST API)
+ 
+Stateless REST API with JWT authentication, designed to be consumed by any frontend client. Both projects share the same MySQL database.
+ 
+ ### Screenshots
 
+### All Endpoints
+![EndPonts](screenshots/all_endpoints.png)
+
+### Login Endpoint
+![Login](login_endpoint.png)
+
+### Authorization
+![Auth](auth.png)
+
+### Game Browse EndPoint
+![Game Browse](gamebrowse_endpoint.png)
+
+---
+ 
+## Roles
+ 
+| Role | Permissions |
+|------|------------|
+| **Game Dev** | Upload, edit, and manage their own games |
+| **Player** | Browse, wishlist, download, and review games |
+| **Admin** | Manage genres, feature games, sync from RAWG, oversee platform |
+ 
+---
+ 
+## Features
+
+### Both Projects
+- Role-based authorization (Admin, GameDev, Player)
+- ASP.NET Core Identity (user management, password hashing)
+- Game upload with cover image and screenshots
+- Advanced search, filtering, sorting, and pagination
+- Wishlist functionality
+- Review system with 1–5 star ratings
+- Developer profiles with GitHub API integration
+- RAWG API integration for importing real game data
+- Admin dashboard with platform statistics
+- Global exception handling with Serilog file logging
+- Request logging middleware
+
+### API Only
+- JWT Bearer authentication with refresh token rotation
+- Background sync service (RAWG games synced every 24 hours)
+- Rate limiting on admin sync endpoint (1 request per 10 minutes)
+- In-memory caching for form data with cache invalidation
+- Swagger UI with JWT Bearer support
+
+### MVC Only
+- Cookie-based authentication via SignInManager
+- Razor Views with Bootstrap 5 UI
+- AJAX wishlist and live search (no page reload)
+- Custom 404 and 500 error pages
+---
+ 
+## API Endpoints
+ 
+### Auth — `api/account`
+ 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/register` | None | Register as Player or GameDev |
+| POST | `/login` | None | Login, returns access + refresh token |
+| POST | `/refresh` | None | Refresh access token |
+| POST | `/logout` | Required | Revoke refresh token |
+ 
+### Profile — `api/profile`
+ 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/{userId}` | Required | Get developer profile |
+| PATCH | `/{userId}` | GameDev (owner) | Update GitHub username |
+ 
+### Games — `api/game`
+ 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `` | None | Browse games with filters and pagination |
+| GET | `/{gameId}` | None | Get game details |
+| GET | `/formdata` | GameDev | Get genres, engines, platforms, tags |
+| GET | `/mine` | GameDev | Get logged-in dev's games |
+| POST | `` | GameDev | Upload new game |
+| PUT | `/{gameId}` | GameDev (owner) | Update game |
+| DELETE | `/{gameId}` | GameDev (owner) | Delete game |
+ 
+### Reviews
+ 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `api/games/{gameId}/reviews` | Player | Create review |
+| DELETE | `api/review/{reviewId}` | Player / Admin | Delete review |
+ 
+### Wishlist — `api/wishlist`
+ 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/{gameId}` | Player | Add game to wishlist |
+| DELETE | `/{gameId}` | Player | Remove from wishlist |
+| GET | `` | Player | View wishlist |
+ 
+### Downloads — `api/download`
+ 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/{gameId}` | Required | Download game |
+| GET | `/history` | Required | View download history |
+ 
+### Admin — `api/admin`
+ 
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/dashboard` | Admin | Platform statistics |
+| POST | `/genres` | Admin | Create genre |
+| DELETE | `/genres/{genreId}` | Admin | Delete genre |
+| PATCH | `/games/{gameId}/feature` | Admin | Toggle featured status |
+| POST | `/sync` | Admin | Sync games from RAWG (rate limited: 1/10 min) |
+ 
+---
+ 
 ## Technologies
-
-* ASP.NET Core 9 MVC
-* Entity Framework Core (Code-First, Fluent API)
-* Dapper (read-heavy queries)
-* MySQL
-* ASP.NET Core Identity
-* Razor Views
-* Bootstrap 5
-* JavaScript (Fetch API / AJAX)
-* GitHub REST API
-* RAWG Video Games Database API
-* Bogus (seed data)
-* xUnit (unit tests)
-
+ 
+| Category | Technology |
+|----------|-----------|
+| Backend | ASP.NET Core 9, C# |
+| ORM | Entity Framework Core (Code-First, Fluent API) |
+| Queries | Dapper (read-heavy queries) |
+| Database | MySQL |
+| Auth (MVC) | ASP.NET Core Identity, Cookie Authentication |
+| Auth (API) | JWT Bearer, Refresh Tokens |
+| Frontend | Razor Views, Bootstrap 5, JavaScript (Fetch API) |
+| API Docs | Swagger / Swashbuckle |
+| Logging | Serilog (daily rolling files) |
+| Caching | IMemoryCache |
+| External APIs | GitHub REST API, RAWG Video Games Database API |
+| Seed Data | Bogus |
+| Testing | xUnit |
+ 
 ---
-
+ 
 ## Architecture
-
-* Clean Architecture with separation of concerns
-* Repository Pattern for abstracted data access
-* Service Layer for business logic encapsulation
-* DTOs for decoupling service layer from domain models
-* ViewModels for decoupling controllers from views
-* Dependency Injection throughout (constructor injection)
-* Hybrid data access:
-
-  * EF Core for writes
-  * Dapper for complex reads
-* EF Core Fluent API configurations in `Data/Configurations/`
-* External API integration:
-
-  * GitHub API (developer profiles)
-  * RAWG API (game data sync)
-* Custom middleware:
-
-  * Global exception handling
-  * Request logging
-* Role-based authorization throughout
-
+ 
+- Clean Architecture with separation of concerns
+- Repository Pattern for abstracted data access
+- Service Layer for business logic encapsulation
+- DTOs for decoupling service layer from domain models
+- Dependency Injection throughout (constructor injection)
+- Hybrid data access: EF Core for writes, Dapper for complex reads
+- EF Core Fluent API configurations in `Data/Configurations/`
+- Custom middleware: global exception handling, request logging
+- Role-based authorization throughout
 ---
-
+ 
 ## Dependency Flow
-
-```text
+ 
+```
 HTTP Request
     ↓
 Controller (thin — routing and response only)
@@ -128,147 +217,165 @@ Repository (data access, returns entities)
     ↓
 DbContext → MySQL
 ```
-
+ 
 ---
-
+ 
 ## Setup
-
+ 
 ### Prerequisites
-
-* .NET 10 SDK
-* MySQL Server
-* Visual Studio 2022
-
-### Steps
-
-#### 1. Clone the repository
-
+ 
+- .NET 10 SDK
+- MySQL Server
+- Visual Studio 2022
+### MVC Project (IndieVault)
+ 
+**1. Clone the repository**
+ 
 ```bash
 git clone https://github.com/Umer-Iftikhar/indie-vault
 ```
-
-#### 2. Restore dependencies
-
+ 
+**2. Restore dependencies**
+ 
 ```bash
 dotnet restore
 ```
-
-#### 3. Add connection string via User Secrets
-
+ 
+**3. Add connection string via User Secrets**
+ 
 ```bash
 dotnet user-secrets set "ConnectionStrings:DefaultConnection" "server=localhost;database=IndieVault;user=root;password=your-password"
 ```
-
-#### 4. Add RAWG API key via User Secrets
-
+ 
+**4. Add RAWG API key via User Secrets**
+ 
 ```bash
 dotnet user-secrets set "RawgApi:Key" "your-rawg-api-key"
 ```
-
-Get a free API key from:
-
-https://rawg.io/apidocs
-
-#### 5. Run migrations
-
-Open **Package Manager Console** in Visual Studio:
-
+ 
+Get a free API key from [rawg.io/apidocs](https://rawg.io/apidocs)
+ 
+**5. Run migrations**
+ 
 ```powershell
 Update-Database
 ```
-
-#### 6. Run the application
-
-The database will be seeded automatically on first run in Development mode.
-
+ 
+**6. Run the application**
+ 
+Database seeds automatically on first run in Development mode.
+ 
 ---
-
+ 
+### API Project (IndieVault.Api)
+ 
+**1. Add JWT settings and API keys via User Secrets**
+ 
+```bash
+dotnet user-secrets set "JwtSettings:SecretKey" "your-secret-key-minimum-32-characters"
+dotnet user-secrets set "JwtSettings:Issuer" "indie-vault"
+dotnet user-secrets set "JwtSettings:Audience" "indie-vault-users"
+dotnet user-secrets set "RawgApi:Key" "your-rawg-api-key"
+```
+ 
+**2. Run the API**
+ 
+The API shares the same database as the MVC project. Run MVC migrations first.
+ 
+**3. Access Swagger UI**
+ 
+```
+http://localhost:{port}/swagger
+```
+ 
+Login via `POST /api/account/login`, copy the access token, click **Authorize** in Swagger, paste the token.
+ 
+---
+ 
 ## Default Admin Account
-
-```text
-Email: admin@indiehub.com
+ 
+```
+Email:    admin@indiehub.com
 Password: Password123!
 ```
-
+ 
 ---
-
+ 
 ## Testing
-
-Unit tests are located in the `IndieVault.Tests` project.
-
-Run tests through:
-
-```text
-Test → Run All Tests
-```
-
-or
-
+ 
 ```bash
 dotnet test
 ```
-
+ 
 ---
-
-## Notes
-
-* GitHub API requires no key (public data, 60 requests/hour unauthenticated)
-* RAWG API free tier allows 20,000 requests/month
-* Game images are stored in:
-
-```text
-wwwroot/images/games/{gameId}/
-```
-
-```md
+ 
 ## Logging
-
-The application uses Serilog for structured logging.
-
-Features:
-- Daily rolling log files
-- Request logging middleware
-- Global exception logging
-- Separate log storage directory (`Logs/`)
-
-Example log structure:
-
-```text
-Logs/
-├── app-2026-05-30.log
-├── app-2026-05-31.log
-└── app-2026-06-01.log
+ 
+Serilog with daily rolling log files stored in the `logs/` directory.
+ 
 ```
-
-in the project root.
-
+logs/
+├── app-20260530.log
+├── app-20260531.log
+└── app-20260601.log
+```
+ 
 ---
-
+ 
 ## Project Structure
-
-```text
-IndieVault/
-├── Controllers/          # HTTP request handling, thin actions
-├── Models/               # Database entities (BaseEntity inherited by all)
-├── ViewModels/           # Controller → View data transfer
-├── DTOs/                 # Service layer data transfer objects
-├── Views/                # Razor templates
+ 
+```
+IndieVault/                   # MVC Web Application
+├── Controllers/
+├── Models/
+├── ViewModels/
+├── DTOs/
+├── Views/
 ├── Services/
-│   ├── Interfaces/       # Service contracts
-│   └── Implementations/  # Business logic
-│       └── ExternalApis/ # GitHub and RAWG API services
+│   ├── Interfaces/
+│   └── Implementations/
+│       └── ExternalApis/
 ├── Repositories/
-│   ├── Interfaces/       # Repository contracts
-│   └── Implementations/  # EF Core and Dapper data access
+│   ├── Interfaces/
+│   └── Implementations/
 ├── Data/
-│   ├── Configurations/   # EF Core Fluent API entity configurations
+│   ├── Configurations/
 │   ├── AppDbContext.cs
 │   ├── DatabaseSeeder.cs
 │   └── Migrations/
-├── Middleware/           # Global exception handling, request logging
-├── Extensions/           # Middleware registration extensions
-├── Enums/                # Shared enumerations
-└── wwwroot/              # Static files (CSS, JS, images)
-
-IndieVault.Tests/         # xUnit unit tests
+├── Middleware/
+├── Extensions/
+├── Enums/
+└── wwwroot/
+ 
+IndieVault.Api/               # REST API
+├── Controllers/
+├── Models/
+├── DTOs/
+│   ├── Auth/
+│   ├── Game/
+│   ├── Review/
+│   ├── Wishlist/
+│   ├── Download/
+│   ├── Admin/
+│   ├── GitHub/
+│   ├── Rawg/
+│   └── Shared/
+├── Services/
+│   ├── Interfaces/
+│   └── Implementations/
+│       └── ExternalApis/
+├── Repositories/
+│   ├── Interfaces/
+│   └── Implementations/
+├── Data/
+│   ├── Configurations/
+│   ├── AppDbContext.cs
+│   └── Migrations/
+├── Middleware/
+├── Extensions/
+├── Enums/
+└── Settings/
+ 
+IndieVault.Tests/             # xUnit unit tests
 ```
