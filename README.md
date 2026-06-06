@@ -4,7 +4,7 @@ A full-stack web platform where indie game developers can showcase their work, p
  
 ## 🌐 Live Demo
  
- # MVC
+ ### MVC
 **[indie-vault-production.up.railway.app](https://indie-vault-production.up.railway.app)**
  
 > Note: First load may take 30 seconds if the server is waking up.
@@ -54,7 +54,7 @@ Stateless REST API with JWT authentication, designed to be consumed by any front
 ![EndPonts](screenshots/all_endpoints.png)
 
 ### Login Endpoint
-![Login](lscreenshots/ogin_endpoint.png)
+![Login](screenshots/login_endpoint.png)
 
 ### Authorization
 ![Auth](screenshots/auth.png)
